@@ -1,9 +1,9 @@
-subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut,&
+subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut,&
                      eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                      g,Anorm,resp,refvar,verbose)
 !!! Sets the parameters of reltrans depending on the Cp variable
   implicit none
-  integer         , intent(in)   :: dset, nlp, verbose
+  integer         , intent(in)   :: Cp, dset, nlp, verbose
   real            , intent(in)   :: param(32)
   double precision, intent(out)  :: h(nlp), a, inc, rin, rout, zcos, Gamma
   double precision, intent(out)  :: honr, b1, b2, qboost, eta_0, eta
@@ -26,8 +26,12 @@ subroutine set_param(dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,l
   Gamma    = dble( param(8) )
   logxi    = param(9)  ! or distance
   Afe      = param(10)
-  lognep   = param(11) 
-  Ecut     = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
+  lognep   = param(11)
+  if (Cp .eq. -1) then 
+     Ecut = 300.0
+  else
+     Ecut     = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
+  endif
   !if(nlp .gt. 1 .and. param(13) .eq. 0) then
   !    eta_0 = 1.e-4
   !    if (verbose .gt. 0) print*,"WARNING: low eta_0 for double LP, careful with pivoting!!!"
