@@ -1,8 +1,8 @@
 !-----------------------------------------------------------------------
-    function get_norm_cont(Gamma, Ecut_obs, logxi, logne)
+    function get_norm_cont(Gamma, Cutoff, logxi, logne)
       implicit none
 
-      real   , intent(IN) :: logxi, logne, Gamma, Ecut_obs
+      real   , intent(IN) :: logxi, logne, Gamma, Cutoff
       integer, parameter  :: nex = 1000
       real   , parameter  :: pi = acos(-1.0), ergsev  = 1.602197e-12 ! Convert eV to ergs
       integer             :: i, ifl
@@ -12,7 +12,7 @@
             
 !continuum paramters 
       nth_par(1) = Gamma
-      nth_par(2) = Ecut_obs
+      nth_par(2) = Cutoff
       nth_par(3) = 0.05d0
       nth_par(4) = 1.d0
       nth_par(5) = 0.d0

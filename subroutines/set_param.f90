@@ -1,4 +1,4 @@
-subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut,&
+subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff,&
                      eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                      g,Anorm,resp,refvar,verbose)
 !!! Sets the parameters of reltrans depending on the Cp variable
@@ -7,7 +7,7 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   real            , intent(in)   :: param(32)
   double precision, intent(out)  :: h(nlp), a, inc, rin, rout, zcos, Gamma
   double precision, intent(out)  :: honr, b1, b2, qboost, eta_0, eta
-  real            , intent(out)  :: logxi, Afe, lognep, Ecut, beta_p
+  real            , intent(out)  :: logxi, Afe, lognep, Cutoff, beta_p
   real            , intent(out)  :: Nh, boost, Mass, floHz, fhiHz
   real            , intent(out)  :: DelA, DelAB(nlp), g(nlp), Anorm, Dkpc
   integer         , intent(out)  :: ReIm, resp, refvar
@@ -28,16 +28,11 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   Afe      = param(10)
   lognep   = param(11)
   if (Cp .eq. 1) then 
-     Ecut = 300.0
+     Cutoff = 300.0
   else
-     Ecut     = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
+     Cutoff = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
   endif
-  !if(nlp .gt. 1 .and. param(13) .eq. 0) then
-  !    eta_0 = 1.e-4
-  !    if (verbose .gt. 0) print*,"WARNING: low eta_0 for double LP, careful with pivoting!!!"
-  !else
   eta_0    = param(13)
-  !end if  
   eta      = param(14)
   beta_p   = param(15)
   Nh       = param(16)
@@ -63,12 +58,6 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   else
      Dkpc = 0.0
   end if
-  
-  !WIP optimization, need to think how best to handle this for cases when phiab/g change
-  !but we don't want to re-do all the convolutions
- ! if(all(g .eq. 0 ) .or. all(DelAB .eq. 0)) then
- !    refvar = 0  
- ! end if
 
   return
 end subroutine set_param
