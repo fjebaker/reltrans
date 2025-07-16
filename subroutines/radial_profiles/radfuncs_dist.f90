@@ -51,7 +51,7 @@ subroutine radfuncs_dist(xe, rin, rnmax, b1, b2, qboost, fcons,&
      gsdr(i) = gsd
      eps_bol = gsd**2 * 2.0 * pi * ptf
      eps_bol = eps_bol * cosfac / dareafac(re,spin)
-     Fx(i)   = fcons * 4.0 * pi * eps_bol
+     Fx(i)   = fcons * eps_bol
      !Calculate logxi(r)
      logxir(i) = log10( 4.0 * pi * Fx(i) ) - logner(i)
      !Now adjust to effective ionization parameter
