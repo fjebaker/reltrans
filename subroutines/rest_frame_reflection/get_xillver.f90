@@ -21,14 +21,14 @@
       real   , intent(out) :: photar(ne)
 
       real                :: photer(ne)
-      integer             :: ifl
+      integer             :: ifl, i
 
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
-         ! write(*,*) 'xillver parameters', param6
+         ! write(*,*) 'xillverPL parameters', param_xillPL
          call xsatbl(ear, ne, param_xillPL, trim(pathname_xillver), ifl, photar, photer)
       else if( Cp .eq. 1 )then     !xillverD
-         ! write(*,*) 'xillver powerlaw parameters', param_xillPL
+         ! write(*,*) 'xillverD parameters', param_xillPL
          ! write(*,*) trim(pathname_xillverD)
          call xsatbl(ear, ne, param_xillPL, trim(pathname_xillverD), ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp

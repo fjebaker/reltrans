@@ -26,7 +26,7 @@
 
       Icomp = 0.0
 
-      ! if (Cp .eq. 2) then
+      if (Cp .eq. 2) then
 !So far this works only with kTe, so only with nthComp continuum model
          nth_par(1) = real(Gamma)
          nth_par(2) = Ecut_obs
@@ -56,12 +56,12 @@
          ! write(*,*) 'continuum normalization parameters', get_norm_cont_local, logxi, logne
 
       ! endif
+         
+      else
 
-      if (Cp .eq. 1) then
-
+         ! write(*,*) 'continuum parameters ', Cp, Gamma, Ecut_obs
          do i = 1, nex
             E   = 0.5 * ( earx(i) + earx(i-1) )
-            
             contx(i) = E**(-1.0*real(Gamma)+1) * exp(-E/(Ecut_obs)) 
             if (E .ge. 0.1 .and. E .le. 1e3) then
                Icomp = Icomp + ((earx(i) + earx(i-1)) * 0.5 * contx(i))
@@ -69,7 +69,12 @@
          enddo
          inc_flux = 10**(logne + logxi) / (4.0 * pi) / ergsev !calculate incident flux in units  [keV/cm^2/s]
          get_norm_cont_local = inc_flux/ Icomp / 1e20
+         contx = contx * get_norm_cont_local / (10**(logxi + logne - 15))
       endif
+      ! do i = 1, nex
+      !    write(20, *) (earx(i-1) + earx(i)) *0.5, contx(i)
+      ! enddo
+      ! write(20, *) 'no no'
          
       return
     end subroutine getcont
