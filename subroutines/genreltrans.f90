@@ -302,7 +302,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if( verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:",frrel    
     
     if( verbose .gt. 2) call CPU_TIME (time_start)  
-    ! if( needconv )then
+    if( needconv )then
         !needtrans = .false.
         !Initialize arrays for transfer functions
         ReW0 = 0.0
@@ -395,7 +395,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                  end do
             end do
         end do
-    ! end if
+    end if
     if( verbose .gt. 2 ) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 
