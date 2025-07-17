@@ -65,7 +65,7 @@ for table_name in xillver_table_name:
                 logne = spectra_extension.field(0)[:,3].reshape(length,1) #  logne density values of the spectra
                 spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi + logne - 15)
 
-            norm_table_name = fits_image_filename[:-5] + '_normalised2.fits'
+            norm_table_name = fits_image_filename[:-5] + '_normalised.fits'
             hdul.writeto(norm_table_name)
         print(f'The script created a new table called {norm_table_name}')
         print()
