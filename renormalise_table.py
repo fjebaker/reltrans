@@ -44,31 +44,33 @@ print()
 print('This script is going to create new version of the xillver tables')
 print('in the same folder xillver tables (keep in mind the disk space)')
 print()
-query_yes_no('Do you agree?')
+if (query_yes_no('Do you agree?')):
 
-for table_name in xillver_table_name:    
-    fits_image_filename = str(reltrans_table) + '/' + str(table_name)
-    try:
-        with fits.open(fits_image_filename) as hdul:
-            spectra_extension = hdul['SPECTRA'].data
-            length = len(spectra_extension.field(0))
-
-            if (table_name == 'xillverCp_v3.4.fits'):
-                logxi = spectra_extension.field(0)[:,2].reshape(length,1) # logxi ionisation values of the spectra
-                logne = spectra_extension.field(0)[:,4].reshape(length,1) #  logne density values of the spectra
-                spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi + logne - 15)
-            if (table_name == 'xillver-a-Ec5.fits'):
-                logxi = spectra_extension.field(0)[:,2].reshape(length,1) # logxi ionisation values of the spectra
-                spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi)
-            if (table_name == 'xillverD-5.fits'):
-                logxi = spectra_extension.field(0)[:,2].reshape(length,1) # logxi ionisation values of the spectra
-                logne = spectra_extension.field(0)[:,3].reshape(length,1) #  logne density values of the spectra
-                spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi + logne - 15)
-
-            norm_table_name = fits_image_filename[:-5] + '_normalised.fits'
-            hdul.writeto(norm_table_name)
-        print(f'The script created a new table called {norm_table_name}')
-        print()
-    except:
-        print(f'There is no table called {fits_image_filename}')
-
+    for table_name in xillver_table_name:    
+        fits_image_filename = str(reltrans_table) + '/' + str(table_name)
+        try:
+            with fits.open(fits_image_filename) as hdul:
+                spectra_extension = hdul['SPECTRA'].data
+                length = len(spectra_extension.field(0))
+                if (table_name == 'xillverCp_v3.4.fits'):
+                    logxi = spectra_extension.field(0)[:,2].reshape(length,1) # logxi ionisation values of the spectra
+                    logne = spectra_extension.field(0)[:,4].reshape(length,1) #  logne density values of the spectra
+                    spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi + logne - 15)
+                if (table_name == 'xillver-a-Ec5.fits'):
+                    logxi = spectra_extension.field(0)[:,2].reshape(length,1) # logxi ionisation values of the spectra
+                    spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi)
+                if (table_name == 'xillverD-5.fits'):
+                    logxi = spectra_extension.field(0)[:,2].reshape(length,1) # logxi ionisation values of the spectra
+                    logne = spectra_extension.field(0)[:,3].reshape(length,1) #  logne density values of the spectra
+                    spectra_extension['INTPSPEC'] = spectra_extension['INTPSPEC'] / 10**(logxi + logne - 15)
+                norm_table_name = fits_image_filename[:-5] + '_normalised.fits'
+                try: 
+                    hdul.writeto(norm_table_name)
+                    print(f'The script created a new table called {norm_table_name}')
+                    print()
+                except:
+                    print(f'Table {norm_table_name} has not been created since it already exists')
+        except:
+            print(f'There is no table called {fits_image_filename}')
+else:
+    print('No table has been created')        
