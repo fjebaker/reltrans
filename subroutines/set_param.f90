@@ -27,11 +27,7 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   logxi    = param(9)  ! or distance
   Afe      = param(10)
   lognep   = param(11)
-  if (Cp .eq. 1) then 
-     Ecut = 300.0
-  else
-     Ecut     = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
-  endif
+  Ecut     = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
   !if(nlp .gt. 1 .and. param(13) .eq. 0) then
   !    eta_0 = 1.e-4
   !    if (verbose .gt. 0) print*,"WARNING: low eta_0 for double LP, careful with pivoting!!!"
