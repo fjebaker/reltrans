@@ -26,8 +26,6 @@
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
          call xsatbl(ear, ne, param_xillPL, trim(pathname_xillver), ifl, photar, photer)
-      else if( Cp .eq. 1 )then     !xillverD
-         call xsatbl(ear, ne, param_xillPL, trim(pathname_xillverD), ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp
          call xsatbl(ear, ne, param_xillCp, trim(pathname_xillverDCp), ifl, photar, photer)
       else

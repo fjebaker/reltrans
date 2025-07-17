@@ -27,11 +27,7 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   logxi    = param(9)  ! or distance
   Afe      = param(10)
   lognep   = param(11)
-  if (Cp .eq. 1) then 
-     Cutoff = 300.0
-  else
-     Cutoff = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
-  endif
+  Cutoff   = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
   eta_0    = param(13)
   eta      = param(14)
   beta_p   = param(15)
