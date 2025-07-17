@@ -16,4 +16,6 @@ cd $fftw
 make CFLAGS="-fPIC"
 make install 
 
+cd $pwdPATH
 
+python renormalise_table.py
