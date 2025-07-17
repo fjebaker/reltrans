@@ -39,7 +39,7 @@ subroutine normreflionx(ear,ne,Gamma,Afe,logne,kTe,logxi,thetae,photar)
   xillparDCp(1) = Gamma  !photon index
   xillparDCp(2) = Afe    !Afe
   xillparDCp(3) = logxi  !ionization par
-  xillparDCp(4) = kTe    !Ecut or kTe
+  xillparDCp(4) = kTe    !kTe
   lognex = logne
   lognex = min(logne,20.0)
   lognex = max(logne,15.0)

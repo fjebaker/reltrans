@@ -45,7 +45,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision :: d
     !Parameters of the model:
     double precision :: h(nlp), a, inc, rin, rout, zcos, Gamma, honr, muobs 
-    real             :: logxi, Afe, lognep, Ecut_obs, Ecut_s, Dkpc, Anorm, beta_p
+    real             :: logxi, Afe, lognep, Cutoff_obs, Cutoff_s, Dkpc, Anorm, beta_p
     real             :: Nh, boost, Mass, floHz, fhiHz, DelA, DelAB(nlp), g(nlp)
     integer          :: ReIm, resp_matr
     double precision :: qboost,b1,b2, eta, eta_0
@@ -93,7 +93,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision :: disco, dgsofac
     ! New  
     double precision :: fcons,get_fcons,contx_temp!,ell13pt6,lacc,get_lacc,
-    real             :: Gamma0,logne,Ecut0,thetae,logxi1, logxi2
+    real             :: Gamma0,logne,Cutoff_0,thetae,logxi1, logxi2
     integer          :: Cp_cont
     real time_start,time_end        !runtime stuff
     integer env_test
@@ -122,11 +122,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
     !LP we use the temperature in the observer frame
     if (nlp .eq. 1) then
-        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_obs,&
+        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff_obs,&
                        eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                        g,Anorm,resp_matr,refvar,verbose)        
     else 
-        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Ecut_s,&
+        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff_s,&
                        eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                        g,Anorm,resp_matr,refvar,verbose) 
     end if 
@@ -277,7 +277,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     !We need to call the continuum BEFORE the radial profiles in the rest of the flavuors
     if( dset .eq. 0 .or. size(h) .eq. 2) then
        !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
-       call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep, muobs,Cp_cont,Cp,fcons,Gamma,&
+       call init_cont(nlp,a,h,zcos,Cutoff_s,Cutoff_obs,logxi, lognep, muobs,Cp_cont,Cp,fcons,Gamma,&
                    Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
 
        call radfunctions_dens(verbose,xe,rin,rnmax,eta_0,dble(logxi),dble(lognep),a,h,Gamma,honr,&
@@ -288,7 +288,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                            & logxir,gsdr,logner,pnorm)
         !set up the continuum spectrum plus relative quantities (cutoff energies, lensing/gfactors, luminosity, etc)
         logxi = logxir(1)
-        call init_cont(nlp,a,h,zcos,Ecut_s,Ecut_obs,logxi, lognep,muobs,Cp_cont,Cp,fcons,Gamma,&
+        call init_cont(nlp,a,h,zcos,Cutoff_s,Cutoff_obs,logxi, lognep,muobs,Cp_cont,Cp,fcons,Gamma,&
                    Dkpc,Mass,earx,Emin,Emax,contx,dlogE,verbose,dset,Anorm,contx_int,eta)
 
      end if
@@ -302,7 +302,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     if( verbose .gt. 0) write(*,*)"Relxill reflection fraction for each source:",frrel    
     
     if( verbose .gt. 2) call CPU_TIME (time_start)  
-    ! if( needconv )then
+    if( needconv )then
         !needtrans = .false.
         !Initialize arrays for transfer functions
         ReW0 = 0.0
@@ -327,10 +327,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
             !Set parameters with radial dependence
             Gamma0 = real(Gamma)
             logne  = logner(rbin)
-            Ecut0  = real( gsdr(rbin) ) * Ecut_s
+            Cutoff_0  = real( gsdr(rbin) ) * Cutoff_s
             logxi0 = real( logxir(rbin) )
             if( xe .eq. 1 )then
-                Ecut0  = Ecut_s
+                Cutoff_0  = Cutoff_s
                 logne  = lognep
                 logxi0 = logxi
             end if
@@ -344,18 +344,18 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                 thetae = acos( mue ) * 180.0 / real(pi)
                 if( me .eq. 1 ) thetae = real(inc)
                 !Call restframe reflection model
-                call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi0,thetae,Cp,photarx)
+                call rest_frame(earx,nex,Gamma0,Afe,logne,Cutoff_0,logxi0,thetae,Cp,photarx)
                 !NON LINEAR EFFECTS
                 if (DC .eq. 0) then 
                    !Gamma variations
                    logxi1 = logxi0 + ionvariation * dlogxi1
-                   call rest_frame(earx,nex,Gamma1,Afe,logne,Ecut0,logxi1,thetae,Cp,photarx_1)
+                   call rest_frame(earx,nex,Gamma1,Afe,logne,Cutoff_0,logxi1,thetae,Cp,photarx_1)
                    logxi2 = logxi0 + ionvariation * dlogxi2
-                   call rest_frame(earx,nex,Gamma2,Afe,logne,Ecut0,logxi2,thetae,Cp,photarx_2)
+                   call rest_frame(earx,nex,Gamma2,Afe,logne,Cutoff_0,logxi2,thetae,Cp,photarx_2)
                    photarx_delta = (photarx_2 - photarx_1)/(Gamma2-Gamma1)
                    !xi variations
-                   call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi1,thetae,Cp,photarx_1)
-                   call rest_frame(earx,nex,Gamma0,Afe,logne,Ecut0,logxi2,thetae,Cp,photarx_2)
+                   call rest_frame(earx,nex,Gamma0,Afe,logne,Cutoff_0,logxi1,thetae,Cp,photarx_1)
+                   call rest_frame(earx,nex,Gamma0,Afe,logne,Cutoff_0,logxi2,thetae,Cp,photarx_2)
                    photarx_dlogxi = 0.434294481 * (photarx_2 - photarx_1) / (dlogxi2-dlogxi1) !pre-factor is 1/ln10
                 end if
                 !Loop through frequencies and lamp posts
@@ -372,12 +372,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                             imline_w3(m,i) = aimag( ker_W3(m,i,j,mubin,rbin) )
                         end do  
                     end do
-                    !always: convolution for reverberation/DC spectrum
-                    !TBD: add flag here to do this convolution if no reflection time, or different convolution with complex
-                    !xillver if tref > 0 or something.                    
-
                     if (test) then
-                       
                        call conv_one_FFT(dyn,photarx,reline_w0,imline_w0,ReW0(:,:,j),ImW0(:,:,j),DC,nlp)
                        if(DC .eq. 0 .and. refvar .eq. 1) then
                           call conv_one_FFT(dyn,photarx,reline_w1,imline_w1,ReW1(:,:,j),ImW1(:,:,j),DC,nlp)
@@ -397,14 +392,10 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
                           call conv_one_FFTw(dyn,photarx_dlogxi,reline_w3,imline_w3,ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
                        end if
                     endif                    
-                    !old call: always convolve every single transfer function in one go
-                    !call conv_all_FFTw(dyn,photarx,photarx_delta,photarx_dlogxi,reline_w0,imline_w0,reline_w1,imline_w1,&
-                    !     reline_w2,imline_w2,reline_w3,imline_w3,ReW0(:,:,j),ImW0(:,:,j),ReW1(:,:,j),ImW1(:,:,j),&
-                    !     ReW2(:,:,j),ImW2(:,:,j),ReW3(:,:,j),ImW3(:,:,j),DC,nlp)
                  end do
             end do
         end do
-    ! end if
+    end if
     if( verbose .gt. 2 ) then
         call CPU_TIME (time_end)
         print *, 'Convolutions runtime: ', time_end - time_start, ' seconds' 

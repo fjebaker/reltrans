@@ -25,10 +25,8 @@
 
       ifl = 0
       if( Cp .eq. -1 )then         !xillver
-         ! write(*,*) 'xillverPL parameters', param_xillPL
          call xsatbl(ear, ne, param_xillPL, trim(pathname_xillver), ifl, photar, photer)
       else if ( Cp .eq. 2 )then    !xillverDCp
-         ! write(*,*) 'xillverCp parameters', param_xillCp
          call xsatbl(ear, ne, param_xillCp, trim(pathname_xillverDCp), ifl, photar, photer)
       else
          write(*,*) 'No xillver model available for this configuration'
