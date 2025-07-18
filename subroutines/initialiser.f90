@@ -106,10 +106,8 @@ subroutine initialiser(firstcall,Emin,Emax,dloge,earx,rnmax,d,needtrans,me,xe,re
 ! set the table names 
         path_tables = get_env_char("RELTRANS_TABLES"  , './' )   !search for the env variable RELTRANS_TABLES otherwise set the path to ./
         write(pathname_xillver, '(A, A, A)') trim(path_tables), '/', trim(xillver)
-        write(pathname_xillverD, '(A, A, A)') trim(path_tables), '/', trim(xillverD)
         write(pathname_xillverDCp, '(A, A, A)') trim(path_tables), '/', trim(xillverDCp)
         write(*,'(A, A)') 'Set the XILLVER table to ', trim(pathname_xillver)
-        write(*,'(A, A)') 'Set the high density XILLVER table to ', trim(pathname_xillverD)
         write(*,'(A, A)') 'Set the nthComp, high density XILLVER table to ', trim(pathname_xillverDCp)
         
         firstcall = .false.
