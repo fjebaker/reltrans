@@ -20,14 +20,30 @@ subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
 
     
     if (nlp .eq. 1) then 
+       contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
+
        ! gso(1) = real( dgsofac(a,h(1)) ) 
        ! call getlens(a,h(1),muobs,lens(1),tauso(1),cosdelta_obs(1))
        ! if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"       
-       Cutoff_s = real(1.d0+zcos) * Cutoff_obs / gso(1)
        Cp_cont = Cp
-       if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx
-       call getcont(Cp, earx, nex, Gamma, Cutoff_obs, logxi, logne, contx(:,1))
-       
+       if( Cp .eq. 0 ) then
+          ! write(*,*) 'nthcomp illumination for reflionx'
+          Cp_cont = 2 !For reflection given by reflionx
+          Cutoff_obs = Cutoff_s * gso(1) / real(1.d0+zcos) 
+          call getcont(Cp, earx, nex, Gamma, Cutoff_s, logxi, logne, contx(:,1))
+          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+       else if (Cp .eq. 2) then 
+          ! write(*,*) 'nthcomp illumination'
+          Cutoff_obs = Cutoff_s * gso(1) / real(1.d0+zcos) 
+          call getcont(Cp, earx, nex, Gamma, Cutoff_s, logxi, logne, contx(:,1))
+          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
+       else if (Cp .eq. -1) then
+          ! write(*,*) 'powerlaw illumination'
+          Cutoff_s = real(1.d0+zcos) * Cutoff_obs / gso(1)
+          call getcont(Cp, earx, nex, Gamma, Cutoff_obs, logxi, logne, contx(:,1))
+          contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
+       endif
+
        if( dset .eq. 1 ) then
           fcons = get_fcons(h(1),a,zcos,Gamma,Dkpc,Mass,Anorm,nex,earx,contx,dlogE)     
        else
@@ -45,25 +61,16 @@ subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
           end if
           if( abs(Cp) .eq. 1 )then
              write(*,*)"Ecut in source restframe (keV)=",Cutoff_s
+             write(*,*)"Ecut in observer restframe (keV)=",Cutoff_obs
           else
              write(*,*)"kTe in source restframe (keV)=", Cutoff_s
+             write(*,*)"kTe in observer restframe (keV)=", Cutoff_obs
           end if
           write(*,*) 'gso factor ', gso(1)
           write(*,*) 'lensing factor ', lens(1)
 
        end if
        
-       contx_int(1) = 1. !note: for a single LP we don't need to account for this factor in the ionisation profile, so it's defaulted to 1       
-
-       ! contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-       if (Cp .eq. 2) then
-          ! write(*,*) 'nthcomp illumination'
-          ! contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
-       else
-          ! write(*,*) 'powerlaw illumination'
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos)))**Gamma * contx
-       endif
     else
        do m=1,nlp   
           !here the observed cutoffs are set from the temperature in the source frame   
