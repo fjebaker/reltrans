@@ -1,3 +1,5 @@
+|Docs|
+
 ***************Installing reltrans***************
 
 Once you have downloaded the reltrans source code, go into the top directory (reverberation_code) and unpack the fftw tar file"
@@ -198,3 +200,6 @@ XSPEC12>model rtdist
 
 XSPEC12>data 1:1 adameg.pha
 
+
+.. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+   :target: https://reltransdocs.readthedocs.io/en/
