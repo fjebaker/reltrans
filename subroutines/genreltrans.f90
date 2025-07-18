@@ -121,16 +121,9 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     
     !Note: the two different calls are because for the double lP we set the temperature from the coronal frame(s), but for the single
     !LP we use the temperature in the observer frame
-    if (nlp .eq. 1) then
-        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff_obs,&
-                       eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
-                       g,Anorm,resp_matr,refvar,verbose)        
-    else 
-        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff_s,&
+        call set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff_s,Cutoff_obs,&
                        eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                        g,Anorm,resp_matr,refvar,verbose) 
-    end if 
-
 
     muobs = cos( inc * pi / 180.d0 )
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+rm -vf libreltrans.so
 
 echo "initpackage reltrans lmodel_reltrans.dat `pwd` \nexit" | xspec
 

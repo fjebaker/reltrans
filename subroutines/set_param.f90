@@ -1,4 +1,4 @@
-subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff,&
+subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Afe,lognep,Cutoff_s, Cutoff_obs, &
                      eta_0,eta,beta_p,Nh,boost,qboost,Mass,honr,b1,b2,floHz,fhiHz,ReIm,DelA,DelAB,&
                      g,Anorm,resp,refvar,verbose)
 !!! Sets the parameters of reltrans depending on the Cp variable
@@ -7,8 +7,8 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   real            , intent(in)   :: param(32)
   double precision, intent(out)  :: h(nlp), a, inc, rin, rout, zcos, Gamma
   double precision, intent(out)  :: honr, b1, b2, qboost, eta_0, eta
-  real            , intent(out)  :: logxi, Afe, lognep, Cutoff, beta_p
-  real            , intent(out)  :: Nh, boost, Mass, floHz, fhiHz
+  real            , intent(out)  :: logxi, Afe, lognep, Cutoff_s, Cutoff_obs 
+  real            , intent(out)  :: Nh, boost, Mass, floHz, fhiHz, beta_p
   real            , intent(out)  :: DelA, DelAB(nlp), g(nlp), Anorm, Dkpc
   integer         , intent(out)  :: ReIm, resp, refvar
   integer m
@@ -27,7 +27,11 @@ subroutine set_param(Cp,dset,param,nlp,h,a,inc,rin,rout,zcos,Gamma,logxi,Dkpc,Af
   logxi    = param(9)  ! or distance
   Afe      = param(10)
   lognep   = param(11)
-  Cutoff   = param(12) !This is the corona frame temperature for the double LP model, and the observed one otherwise
+  if (Cp .gt. -0.5) then 
+     Cutoff_s   = param(12) !In the case of the nthcomp continuum the kTe is in the corona frame temperature (reflionx falls into this)
+  else if (Cp .eq. -1) then
+     Cutoff_obs = param(12) !In the case of the powerlaw continuum Ecut is in the observer restframe
+  endif
   eta_0    = param(13)
   eta      = param(14)
   beta_p   = param(15)
