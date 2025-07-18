@@ -1,6 +1,7 @@
 #!/bin/bash
 #Example of how to set the environment variables in the reltrans MODEL:
 #In order to set the env variable: source example_set_reltrans_env
+#The explanation of all these cariables is in the readthedocs https://reltransdocs.readthedocs.io/en/latest/
 
 export REV_VERB=0
 export MU_ZONES=1
