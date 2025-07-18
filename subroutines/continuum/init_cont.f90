@@ -25,17 +25,11 @@ subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
        ! gso(1) = real( dgsofac(a,h(1)) ) 
        ! call getlens(a,h(1),muobs,lens(1),tauso(1),cosdelta_obs(1))
        ! if( tauso(1) .ne. tauso(1) ) stop "tauso is NaN"       
-       Cp_cont = Cp
-       if( Cp .eq. 0 ) then
-          ! write(*,*) 'nthcomp illumination for reflionx'
-          Cp_cont = 2 !For reflection given by reflionx
+       if( Cp .ge. 0 ) then
+          ! write(*,*) 'nthcomp illumination for nthcomp and reflionx'
+          Cp_cont = 2 !This is needed since we can't use getcont(Cp,...) because in reflionx Cp = 0
           Cutoff_obs = Cutoff_s * gso(1) / real(1.d0+zcos) 
-          call getcont(Cp, earx, nex, Gamma, Cutoff_s, logxi, logne, contx(:,1))
-          contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
-       else if (Cp .eq. 2) then 
-          ! write(*,*) 'nthcomp illumination'
-          Cutoff_obs = Cutoff_s * gso(1) / real(1.d0+zcos) 
-          call getcont(Cp, earx, nex, Gamma, Cutoff_s, logxi, logne, contx(:,1))
+          call getcont(Cp_cont, earx, nex, Gamma, Cutoff_s, logxi, logne, contx(:,1))
           contx = lens(1) * (gso(1)/(real(1.d0+zcos))) * contx
        else if (Cp .eq. -1) then
           ! write(*,*) 'powerlaw illumination'
@@ -78,8 +72,6 @@ subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
           ! call getlens(a,h(m),muobs,lens(m),tauso(m),cosdelta_obs(m))
           ! if( tauso(m) .ne. tauso(m) ) stop "tauso is NaN"
           Cutoff_obs = Cutoff_s * gso(m) / real(1.d0+zcos)
-          Cp_cont = Cp 
-          if( Cp .eq. 0 ) Cp_cont = 2 !For reflection given by reflionx        
           call getcont(Cp, earx, nex, Gamma, Cutoff_obs, logxi, logne, contx(:,m))
           if (m .gt. 1) contx(:,m) = eta*contx(:,m)  
           !TODO fix this section, calculate luminosities better
