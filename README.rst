@@ -1,4 +1,12 @@
-***************Installing reltrans***************
+|Docs|
+
+Documentation
+=============
+
+You can find the documentation at this `link <https://reltransdocs.readthedocs.io/en/>`_. The text below is a leftover place-holder with some rough instructions, which is currently being moved to the readthedocs website. 
+
+Installing reltrans
+===================
 
 Once you have downloaded the reltrans source code, go into the top directory (reverberation_code) and unpack the fftw tar file"
 > tar -xvf fftw-3.3.9.tar.gz
@@ -33,7 +41,8 @@ xillverDCp*        - nthComp continuum, free density.
 The most advanced models are reltransDCp and rtdist. The simplest is reltrans.
 
 
-***************Using reltrans***************
+Using reltrans
+==============
 
 Go to the top reltrans directory (reverberation_code) and type:
 XSPEC12>load libreltrans.dylib
@@ -64,7 +73,8 @@ This enables the user to simultaneously fit lags measured by two instruments. If
 XSPEC always adds a norm parameter. If you are using ReIm=1,2,3,5 then norm must be a free parameter. If you are using ReIm=4,6, then norm *must* be fixed to 1. For the rtdist model, norm must *always* be fixed to 1.
 
 
-***************Using simrtdist***************
+Using simrtdist
+===============
 
 simrtdist is a xspec local model that simulates a lag-energy
 spectrum. You call it like a noral local model but there are a few nuiances:
@@ -82,7 +92,7 @@ calculation of the ionisation parameter.
               6.283      6.283
 
 This is the squared coherence of the frequency band; \gamma^2 =
-|cross-spectrum|^2 / (  Pr * Ps )/
+\|cross-spectrum\|^2 / (  Pr * Ps )/
 
 21:simrtdist:phiA>
               0         -1(         1)     -6.283     -6.283   6.283      6.283
@@ -129,17 +139,22 @@ because it's impossible to stop XSPEC from including it!
 You will then be prompted with the following things (with example
 answers written below):
 
- Enter name of the response file (with full path)
+Enter name of the response file (with full path)
 PN.rmf
- Enter name of the anciliary (arf) response file (with full path)
+
+Enter name of the anciliary (arf) response file (with full path)
 PN.arf
- Enter lower energy in reference band
+
+Enter lower energy in reference band
 0.5
- Enter upper energy in reference band
+
+Enter upper energy in reference band
 10.0
- Enter name of the background file (with full path)
+
+Enter name of the background file (with full path)
 PNbackground_spectrum.fits
- Enter BACKSCAL factor (enter 1 if you dont know what this is)
+
+Enter BACKSCAL factor (enter 1 if you dont know what this is)
 1.
 
 This will simulate an XMM-Newton EPIC-pn observation with the
@@ -150,12 +165,17 @@ error.
 You will then be prompted to enter a root name for the files that
 contain the simulated products:
 
- Enter root name of simulation products
+Enter root name of simulation products
+
 adameg
- -----------------------------------------------
- Outputs: adameg.dat, xadameg.dat
- command: flx2xsp xadameg.dat xadameg.pha xadameg.rsp
- -----------------------------------------------
+
+\-----------------------------------------------
+
+Outputs: adameg.dat, xadameg.dat
+
+command: flx2xsp xadameg.dat xadameg.pha xadameg.rsp
+
+\-----------------------------------------------
 
 You will see that files such as adameg.dat have been created. You're
 not done yet though, because these files will be nonesense! You first
@@ -166,14 +186,19 @@ XSPEC12>dummy 0.5 10.0 20
 
 You will again be prompted to enter a root name for the products:
 
- Enter root name of simulation products
-adameg
- -----------------------------------------------
- Outputs: adameg.dat, xadameg.dat
- command: flx2xsp xadameg.dat xadameg.pha xadameg.rsp
- -----------------------------------------------
+Enter root name of simulation products
 
-In a different terminal, you can take a look at the *.dat file that is
+adameg
+
+\-----------------------------------------------
+
+Outputs: adameg.dat, xadameg.dat
+
+command: flx2xsp xadameg.dat xadameg.pha xadameg.rsp
+
+\-----------------------------------------------
+
+In a different terminal, you can take a look at the .dat file that is
 produced. This is in qdp format. Data group 1 is the simulated
 lag-energy spectrum and data group 2 is the model. You can use this to
 decide if you want to change anything.
@@ -198,3 +223,6 @@ XSPEC12>model rtdist
 
 XSPEC12>data 1:1 adameg.pha
 
+
+.. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+   :target: https://reltransdocs.readthedocs.io/en/
