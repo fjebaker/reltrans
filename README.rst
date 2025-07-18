@@ -1,4 +1,4 @@
-|Docs||License||GitHub release|
+|Docs| |License| |GitHub release|
 
 Reltrans
 ========
