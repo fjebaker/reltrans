@@ -42,7 +42,7 @@ RT_DCP_Params default_parameters() {
       .h = 6.0,
       .a = 0.998,
       .inc = 30.0,
-      .rin = 1.0,
+      .rin = -1.0,
       .rout = 1e3,
       .zcos = 0.0,
       .gamma = 2.0,
@@ -107,7 +107,7 @@ int main() {
   }
 
   for (int i = 0; i < e_num - 1; ++i) {
-    fprintf(fp, "%f %f\n", energy[i], output[i]);
+    fprintf(fp, "%f %f\n", energy[i], energy[i] * output[i]);
   }
 
   fclose(fp);
