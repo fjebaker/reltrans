@@ -65,6 +65,13 @@ RT_DCP_Params default_parameters() {
 }
 
 int main() {
+  const char *rt_tables = getenv("RELTRANS_TABLES");
+  if (rt_tables == NULL) {
+    LOG_ERR("Set the RELTRANS_TABLES environment variable to the path of the "
+            "normalised tables (see the documentation).");
+    return 1;
+  }
+
   const char *output_file = "output.txt";
   const float e_min = 0.1;
   const float e_max = 1000.0;
