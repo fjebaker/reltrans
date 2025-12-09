@@ -1,7 +1,7 @@
 BUILD  := build
 ROOTDIR := ..
 HEADAS_LIB := ${HEADAS}/lib
-FFTWDIR := $(ROOTDIR)/fftw-3.3.9
+HEADAS_INCLUDE := ${HEADAS}/include
 
 FC := gfortran
 
@@ -11,7 +11,7 @@ FFLAGS := -DHAVE_INLINE -g -fPIC -fno-automatic -fno-second-underscore \
 		  -fopenmp \
 		  -O3 \
 		  -I$(BUILD)/include \
-		  -I$(FFTWDIR)/api \
+		  -I$(HEADAS_INCLUDE) \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache
 
@@ -26,18 +26,11 @@ $(BUILD)/bin/relcli: ./cli.c $(BUILD)/lib/libreltrans.so
 	$(CC) $(CFLAGS) cli.c -o $(BUILD)/bin/relcli -Wl,-rpath,$(BUILD)/lib \
 		-L$(BUILD)/lib -lgfortran -lc -lreltrans -lm -lmvec
 
-$(BUILD)/lib/libreltrans.so: $(FFTWDIR)/api/fftw3.f03 $(BUILD)/cache/wrappers.o
+$(BUILD)/lib/libreltrans.so: $(BUILD)/cache/wrappers.o
 	$(LD) $(LDFLAGS) $(BUILD)/cache/wrappers.o -o $@
 
 $(BUILD)/cache/%.o: $(ROOTDIR)/%.f90
 	$(FC) $(FFLAGS) -c $< -o $@
-
-$(FFTWDIR)/api/fftw3.f03: $(FFTWDIR)/api/fftw3.f03.in
-
-$(FFTWDIR)/api/fftw3.f03.in:
-	tar xf ./$(FFTWDIR).tar.gz
-	( cd $(FFTWDIR) && ./configure && make -j $(shell nproc) )
-
 
 $(BUILD):
 	mkdir -p $(BUILD)/bin $(BUILD)/lib $(BUILD)/include $(BUILD)/share $(BUILD)/cache
