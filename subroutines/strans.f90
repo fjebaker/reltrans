@@ -124,17 +124,19 @@ subroutine rtrans_calc(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax, 
     
     !set up saving the impulse response function if user desieres
 !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
+
+    ! Create time grid in units of Rg
+    tmin = 1.0
+    tmax = 2.0e3
+    dlogt = log10( tmax/tmin ) / float(nt)
+    do i = 0,nt
+        tar(i) = tmin * 10.0**( i * dlogt )
+    end do
+    ! Create energy grid optimised for plotting the transfer function (linear)
+    dg = 2.0 / float(ne)
+    resp = 0.0
+
     if (verbose .gt. 1) then    
-        ! Create time grid in units of Rg
-        tmin = 1.0
-        tmax = 2.0e3
-        dlogt = log10( tmax/tmin ) / float(nt)
-        do i = 0,nt
-            tar(i) = tmin * 10.0**( i * dlogt )
-        end do
-        ! Create energy grid optimised for plotting the transfer function (linear)
-        dg = 2.0 / float(ne)
-        resp = 0.0
         !add files to be printed here
         !open (unit = 104, file = 'Output/Impulse_2dImpulse.dat', status='replace', action = 'write')
         open (unit = 103, file = 'Output/Impulse_1dImpulseVsTime.dat', status='replace', action = 'write')
@@ -301,18 +303,18 @@ subroutine rtrans_calc(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax, 
                                                               kfac*thetafac(nl)*normfac*cexp 
                         end do
                         !if large verbose, start saving the impulse response function to file 
-                        if( verbose .gt. 1 ) then
-                            !find the appropriate energy and time bins
-                            gbin = ceiling(g/dg) 
-                            gbin = MAX( 1    , gbin  )
-                            gbin = MIN( gbin , ne    )
-                            tbin = ceiling( log10( tau(nl) / tar(0) ) / dlogt )
-                            !write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
-                            tbin = MAX( 1    , tbin )
-                            tbin = MIN( tbin , nt   )
-                            ! kernel of the impulse response function              
-                            resp(gbin,tbin) = resp(gbin,tbin) + dFe(nl)  
-                        end if 
+
+
+                        !find the appropriate energy and time bins
+                        gbin = ceiling(g/dg) 
+                        gbin = MAX( 1    , gbin  )
+                        gbin = MIN( gbin , ne    )
+                        tbin = ceiling( log10( tau(nl) / tar(0) ) / dlogt )
+                        !write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
+                        tbin = MAX( 1    , tbin )
+                        tbin = MIN( tbin , nt   )
+                        ! kernel of the impulse response function              
+                        resp(gbin,tbin) = resp(gbin,tbin) + dFe(nl)  
                     end do                    
                 end if
             end if                
@@ -396,19 +398,18 @@ subroutine rtrans_calc(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax, 
                         ker_W3(nl,gbin,fbin,mubin,rbin) = ker_W3(nl,gbin,fbin,mubin,rbin) + &
                                                           kfac*thetafac(nl)*normfac*cexp 
                     end do          
-                    !if large verbose, start saving the impulse response function to file 
-                    if( verbose .gt. 1 ) then
-                        !find the appropriate energy and time bins
-                        gbin = ceiling(g/dg) 
-                        gbin = MAX( 1    , gbin  )
-                        gbin = MIN( gbin , ne    )
-                        tbin = ceiling( log10( tau(nl) / tar(0) ) / dlogt )
-                        !write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
-                        tbin = MAX( 1    , tbin )
-                        tbin = MIN( tbin , nt   )
-                        ! kernel of the impulse response function              
-                        resp(gbin,tbin) = resp(gbin,tbin) + dFe(nl)  
-                    end if 
+
+                    !find the appropriate energy and time bins
+                    gbin = ceiling(g/dg) 
+                    gbin = MAX( 1    , gbin  )
+                    gbin = MIN( gbin , ne    )
+                    tbin = ceiling( log10( tau(nl) / tar(0) ) / dlogt )
+                    !write(102,*)re,tau,log10( tau / tar(0) ) / dlogt
+                    tbin = MAX( 1    , tbin )
+                    tbin = MIN( tbin , nt   )
+
+                    ! kernel of the impulse response function
+                    resp(gbin,tbin) = resp(gbin,tbin) + dFe(nl)  
                 end do
             end if
         end do
@@ -425,19 +426,19 @@ subroutine rtrans_calc(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax, 
         frobs(m) = frobs(m) / dgsofac(spin,h(m)) / lens(m)
     end do
 
+    ! Deal with edge effects
+    do tbin = 1,nt
+        resp(1,tbin)  = 0.0
+        resp(ne,tbin) = 0.0
+    end do
+    do gbin = 1,ne
+        resp(gbin,1)  = 0.0
+        resp(gbin,nt) = 0.0
+    end do
     
     !TBD DOUBLE CHECK WTF IS BEING PRINTED TO FILE HERE I MEAN SERIOUSLY
     !finish saving the impulse response function to file
     if( verbose .gt. 1 ) then
-        ! Deal with edge effects
-        do tbin = 1,nt
-            resp(1,tbin)  = 0.0
-            resp(ne,tbin) = 0.0
-        end do
-        do gbin = 1,ne
-            resp(gbin,1)  = 0.0
-            resp(gbin,nt) = 0.0
-        end do          
         do tbin = 1,nt
             sumresp = 0.0
             do gbin = 1,ne
