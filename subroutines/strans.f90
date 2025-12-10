@@ -1,6 +1,40 @@
+    ! Modified by Fergus:
+    !
+    ! this guard function calls directly to rtrans2, which is modified to take
+    ! an additional parameter, so that the impulse response functions can be
+    ! retrieved.
+    !
+    ! The argument are documented in rtrans2
+    !
+subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,&
+        b1,b2,qboost,eta_0,fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,ker_W0,    &
+        ker_W1,ker_W2,ker_W3,frobs,frrel)
+    implicit none
+    integer nro,nphi,ne,nf,me,xe,dset,nlp,verbose
+    double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr,d
+    double precision b1,b2,qboost,rnmax
+    double precision fcons
+    real dloge
+    double precision frobs(nlp),frrel(nlp)
+    double precision eta_0
+
+    !new stuff - move back above once it's implemented properly
+    complex ker_W0(nlp,ne,nf,me,xe),ker_W1(nlp,ne,nf,me,xe)
+    complex ker_W2(nlp,ne,nf,me,xe),ker_W3(nlp,ne,nf,me,xe)
+
+    !arrays to save the transfer function
+    integer, parameter :: nt = 2**9
+    double precision, allocatable :: resp(:,:)
+    if (.not. allocated(resp)) allocate(resp(ne, nt))
+    call rtrans_calc(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,   &
+            zcos,b1,b2,qboost,eta_0,fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,  &
+            ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel,resp)
+end subroutine rtrans
+
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
-                  fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
+subroutine rtrans_calc(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax, &
+        zcos,b1,b2,qboost,eta_0,fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,      &
+        ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel,resp)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -69,7 +103,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     integer, parameter :: nt = 2**9
     integer            :: tbin
     double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
-    double precision, allocatable :: resp(:,:)
+    double precision   :: resp(ne,nt)
 
     data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
     save nrosav,nphisav,spinsav,musav,routsav,mudsav
@@ -100,8 +134,6 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
         end do
         ! Create energy grid optimised for plotting the transfer function (linear)
         dg = 2.0 / float(ne)
-        !allocate and initialize impulse response function    
-        if (.not. allocated(resp)) allocate(resp(ne, nt))
         resp = 0.0
         !add files to be printed here
         !open (unit = 104, file = 'Output/Impulse_2dImpulse.dat', status='replace', action = 'write')
@@ -453,7 +485,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     endif 
 
     return
-end subroutine rtrans
+end subroutine rtrans_calc
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
