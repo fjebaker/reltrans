@@ -22,7 +22,7 @@ subroutine crebin(nex,earx,ReGx,ImGx,ne,ear,ReG,ImG)
   call rebinE(earx,E2ImGx,nex,ear,ImG,ne)
 
   !Convert back to (dN/dE)*dE
-  do i = 1,ne
+  do i = 1,ne-1
      E  = 0.5 * ( ear(i) + ear(i-1) )
      dE = ear(i) - ear(i-1)
      ReG(i) = ReG(i) / E**2 * dE

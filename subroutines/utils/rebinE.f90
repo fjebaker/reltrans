@@ -9,7 +9,7 @@ subroutine rebinE(earx,px,nex,ear,p,ne)
   real FRAC,Ej,Ei,pi,Ei2,pi2,grad,cons,Ehi,Elo,phi,plo
   logical interp
   ilo = 1
-  do j = 1,ne
+  do j = 1,ne-1
      do while( earx(ilo) .le. ear(j-1) .and. ilo .lt. nex )
         ilo = ilo + 1
      end do
