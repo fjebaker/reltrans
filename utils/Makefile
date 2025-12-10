@@ -27,7 +27,7 @@ $(BUILD)/bin/relcli: ./cli.c $(BUILD)/lib/libreltrans.so
 		-L$(BUILD)/lib -lgfortran -lc -lreltrans -lm -lmvec
 
 $(BUILD)/lib/libreltrans.so: $(BUILD)/cache/wrappers.o
-	$(LD) $(LDFLAGS) $(BUILD)/cache/wrappers.o -o $@
+	$(FC) $(LDFLAGS) $(FFLAGS) $(BUILD)/cache/wrappers.o -o $@
 
 $(BUILD)/cache/%.o: $(ROOTDIR)/%.f90
 	$(FC) $(FFLAGS) -c $< -o $@
