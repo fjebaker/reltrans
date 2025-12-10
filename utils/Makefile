@@ -3,11 +3,14 @@ ROOTDIR := ..
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
 
-FC := gfortran
+# This are configurable from the command line
+TARGET = $(shell uname)
+FC = gfortran
 
 CFLAGS := -g -fno-omit-frame-pointer
 
 FFLAGS := -DHAVE_INLINE -g -fPIC -fno-automatic -fno-second-underscore \
+		  -fno-omit-frame-pointer \
 		  -fopenmp \
 		  -O3 \
 		  -I$(BUILD)/include \
@@ -15,8 +18,18 @@ FFLAGS := -DHAVE_INLINE -g -fPIC -fno-automatic -fno-second-underscore \
 		  -J$(BUILD)/cache \
 		  -I$(BUILD)/cache
 
-LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lm -lcfitsio -lpthread \
-		   -L$(BUILD)/lib -L$(HEADAS_LIB) -shared -export-dynamic
+LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lcfitsio \
+		   -L$(BUILD)/lib -L$(HEADAS_LIB)
+
+ifeq ($(TARGET),Linux)
+	FFLAGS += -shared -export-dynamic
+	LDFLAGS += -lm -lpthread
+else
+ifeq ($(TARGET),Darwin)
+	FFLAGS += -dynamiclib
+	LDFLAGS += -lgfortran
+endif
+endif
 
 all: $(BUILD) $(BUILD)/lib/libreltrans.so
 
