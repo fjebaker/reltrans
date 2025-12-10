@@ -24,22 +24,24 @@ LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lcfitsio \
 ifeq ($(TARGET),Linux)
 	FFLAGS += -shared -export-dynamic
 	LDFLAGS += -lm -lpthread
+	SHARED_EXT := so
 else
 ifeq ($(TARGET),Darwin)
 	FFLAGS += -dynamiclib
 	LDFLAGS += -lgfortran
+	SHARED_EXT := dylib
 endif
 endif
 
-all: $(BUILD) $(BUILD)/lib/libreltrans.so
+all: $(BUILD) $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 
 exe: $(BUILD)/bin/relcli
 
-$(BUILD)/bin/relcli: ./cli.c $(BUILD)/lib/libreltrans.so
+$(BUILD)/bin/relcli: ./cli.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 	$(CC) $(CFLAGS) cli.c -o $(BUILD)/bin/relcli -Wl,-rpath,$(BUILD)/lib \
 		-L$(BUILD)/lib -lgfortran -lc -lreltrans -lm -lmvec
 
-$(BUILD)/lib/libreltrans.so: $(BUILD)/cache/wrappers.o
+$(BUILD)/lib/libreltrans.$(SHARED_EXT): $(BUILD)/cache/wrappers.o
 	$(FC) $(LDFLAGS) $(FFLAGS) $(BUILD)/cache/wrappers.o -o $@
 
 $(BUILD)/cache/%.o: $(ROOTDIR)/%.f90
