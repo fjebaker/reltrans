@@ -1,6 +1,11 @@
+! vim: cc=80 wrap tw=80
+include 'subroutines/emissivity.f90'
+include 'subroutines/impulseresponse.f90'
+
 !-----------------------------------------------------------------------
-subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b1,b2,qboost,eta_0,&
-                  fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
+subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax, &
+        zcos,b1,b2,qboost,eta_0,fcons,nro,nphi,ne,dloge,nf,fhi,flo,me,xe,      &
+        ker_W0,ker_W1,ker_W2,ker_W3,frobs,frrel)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -36,6 +41,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     use blcoordinate
     use radial_grids
     use gr_continuum
+    use impulseresponse
     implicit none
     integer nro,nphi,ne,nf,me,xe,dset,nlp
     double precision spin,h(nlp),mu0,Gamma,rin,rout,zcos,fhi,flo,honr
@@ -68,8 +74,7 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     !arrays to save the transfer function
     integer, parameter :: nt = 2**9
     integer            :: tbin
-    double precision   :: tmin, tmax, sumresp, tar(0:nt), dlogt, dg, E
-    double precision, allocatable :: resp(:,:)
+    double precision   :: tmin, tmax, sumresp, dlogt, dg, E
 
     data nrosav,nphisav,spinsav,musav /0,0,2.d0,2.d0/
     save nrosav,nphisav,spinsav,musav,routsav,mudsav
@@ -87,6 +92,8 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     ker_W1 = 0.
     ker_W2 = 0.
     ker_W3 = 0.
+
+    call response_allocate(ne, nt)
     
     !set up saving the impulse response function if user desieres
 !note: the ideal parameters to plot the transfer function are nro~=7000,nphi~=7000,nt~=2e9,nex~=2e10
@@ -96,11 +103,10 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     tmax = 2.0e3
     dlogt = log10( tmax/tmin ) / float(nt)
     do i = 0,nt
-        tar(i) = tmin * 10.0**( i * dlogt )
+        time_axis(i) = tmin * 10.0**( i * dlogt )
     end do
     ! Create energy grid optimised for plotting the transfer function (linear)
     dg = 2.0 / float(ne)
-    resp = 0.0
 
     if (verbose .gt. 1) then    
         !add files to be printed here
@@ -180,12 +186,12 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     call sum_impulse_components(.false., nro, nphi, nlp, nf, ne, me, xe, h,    &
         mu0, mudisk, rmin, rin, rout, zcos, honr, Gamma, rn, domega, fi,       &
         b1, b2, qboost, rnmax, spin, dlogr, eta_0, mueff, dlogt, dloge,        &
-        frobs, dFe, ker_W0, ker_W1, ker_W2, ker_W3, resp)
+        frobs, dFe, ker_W0, ker_W1, ker_W2, ker_W3)
     ! then for the non-relativistic flat-space version
     call sum_impulse_components(.true., nron, nphin, nlp, nf, ne, me, xe, h,   &
         mu0, mudisk, rmin, rin, rout, zcos, honr, Gamma, rnn, domegan, fi,     &
         b1, b2, qboost, rnmax, spin, dlogr, eta_0, mueff, dlogt, dloge,        &
-        frobs, dFe, ker_W0, ker_W1, ker_W2, ker_W3, resp)
+        frobs, dFe, ker_W0, ker_W1, ker_W2, ker_W3)
 
     do m=1,nlp
         ! Calculate 4pi p(theta0,phi0) = ang_fac
@@ -199,40 +205,33 @@ subroutine rtrans(verbose,dset,nlp,spin,h,mu0,Gamma,rin,rout,honr,d,rnmax,zcos,b
     end do
 
     ! Deal with edge effects
-    do tbin = 1,nt
-        resp(1,tbin)  = 0.0
-        resp(ne,tbin) = 0.0
-    end do
-    do gbin = 1,ne
-        resp(gbin,1)  = 0.0
-        resp(gbin,nt) = 0.0
-    end do
-    
+    call response_zero_edges()
+
     !TBD DOUBLE CHECK WTF IS BEING PRINTED TO FILE HERE I MEAN SERIOUSLY
     !finish saving the impulse response function to file
     if( verbose .gt. 1 ) then
         do tbin = 1,nt
             sumresp = 0.0
             do gbin = 1,ne
-                sumresp = sumresp + resp(gbin,tbin)
+                sumresp = sumresp + response(gbin,tbin)
                 E = gbin*dg  !10**( float(gbin-ne/2) * dloge )
-                !write(104,*)0.5*(tar(tbin)+tar(tbin-1)),E,resp(gbin,tbin)
+                !write(104,*)0.5*(time_axis(tbin)+time_axis(tbin-1)),E,response(gbin,tbin)
             end do
-            write(103,*)0.5*(tar(tbin)+tar(tbin-1)),sumresp
+            write(103,*)0.5*(time_axis(tbin)+time_axis(tbin-1)),sumresp
             !write(201, *) sumresp
         end do
 
         do gbin = 1,ne
             sumresp = 0.0
             do tbin = 1,nt
-                sumresp = sumresp + resp(gbin,tbin)
+                sumresp = sumresp + response(gbin,tbin)
             end do
             write(105,*)gbin*dg,sumresp
             !write(202, *) sumresp
         end do
         
         do gbin = 1,ne
-            write(200,*) resp(gbin, :)
+            write(200,*) response(gbin, :)
         enddo
     end if    
 
@@ -270,14 +269,13 @@ subroutine sum_impulse_components(                                             &
         non_relativistic, r_length, phi_length, n_lamposts, nf, ne, me, xe,    &
         h, mu0, mudisk, rmin, rin, rout, zcos, honr, Gamma,                    &
         r_grid, domega, fi, b1, b2, qboost, rnmax, spin, dlogr, eta_0,         &
-        mueff, dlogt, dloge, frobs, dFe, ker_W0, ker_W1, ker_W2, ker_W3,       &
-        resp                                                                   &
-    )
+        mueff, dlogt, dloge, frobs, dFe, ker_W0, ker_W1, ker_W2, ker_W3)
     use dyn_gr
     use radial_grids
     use gr_continuum
     use constants
     use emissivities
+    use impulseresponse
     implicit none
     logical, intent(in) :: non_relativistic
     integer, intent(in) :: r_length, phi_length, n_lamposts, nf, ne, me, xe
@@ -300,10 +298,7 @@ subroutine sum_impulse_components(                                             &
 
     ! time grid bits, should be passed in
     integer, parameter :: nt = 2**9
-    double precision   :: time_grid(0:nt)
     integer            :: tbin
-
-    double precision, intent(out) :: resp(ne, nt)
 
     ! functions
     double precision :: newtex, dglpfacthick, demang, interper,                &
@@ -467,13 +462,13 @@ subroutine sum_impulse_components(                                             &
                 gbin = ceiling(g/dg)
                 gbin = MAX( 1    , gbin  )
                 gbin = MIN( gbin , ne    )
-                tbin = ceiling( log10( tau(m) / time_grid(0) ) / dlogt )
-                ! write(102,*)re,tau,log10( tau / time_grid(0) ) / dlogt
+                tbin = ceiling( log10( tau(m) / time_axis(0) ) / dlogt )
+                ! write(102,*)re,tau,log10( tau / time_axis(0) ) / dlogt
                 tbin = MAX( 1    , tbin )
                 tbin = MIN( tbin , nt   )
 
                 ! kernel of the impulse response function
-                resp(gbin,tbin) = resp(gbin,tbin) + dFe(m)
+                response(gbin,tbin) = response(gbin,tbin) + dFe(m)
             end do
         enddo
     enddo
