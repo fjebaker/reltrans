@@ -95,7 +95,7 @@ contains
   
   subroutine init_fftw_allconv()
     implicit none
-    integer(c_int) :: flags, i
+    integer(c_int) :: flags
     integer, external :: omp_get_max_threads
     INTEGER FFTW_PATIENT
     PARAMETER (FFTW_PATIENT=32)
@@ -131,7 +131,7 @@ contains
     complex :: conv(nec),padFT_photarx(nec)
     complex :: padFT_reline(nec),  padFT_imline(nec)            
     integer :: m, i
-    real    :: photmax, depad_conv(nex), E
+    real    :: depad_conv(nex), E
     
     do m=1,nlp  
        if (DC .eq. 1 ) then
@@ -520,7 +520,7 @@ end module conv_mod
 !*    DATE WRITTEN:  1 Jan 2012 
 !********************************************************************
       implicit none
-      Double precisionz,g2,g3,e1,e2,e3,k2,u,sn,alp,bet,sig,lamb,cn,dn,&
+      Double precision z,g2,g3,e1,e2,e3,k2,u,sn,alp,bet,sig,lamb,cn,dn,&
              two,four,zero
       parameter(two=2.D0,four=4.D0,zero=0.D0)                
       complex*16 r1(1:3)        
@@ -5990,7 +5990,7 @@ end module conv_mod
                                 endif
                             endif   
                         !*************************************************************************************
-                        200     continue
+                        continue
                         else  !photon has probability to fall into black hole.
                             If(f1234r.le.zero)then
                                 index_p4(1)=0

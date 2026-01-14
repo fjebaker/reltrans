@@ -18,7 +18,7 @@ subroutine lag_freq(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,tauso,gs
                            ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)                       
     real,    intent(out):: ReGraw(nf),ImGraw(nf)
     real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
-    real                :: E,fac,TempReG,TempImG 
+    real                :: E,fac
     real                :: f,DelAB_nu,g_nu
     real                :: tau_d,phase_d,tau_p,phase_p,beta,flo,fhi
     complex             :: W0,W1,W2,W3,Sraw,cexp_p,cexp_d,cexp_phi,Stemp
@@ -149,10 +149,10 @@ subroutine lag_freq_nocoh(nex,earx,nf,fix,flo,fhi,Emin,Emax,nlp,contx,absorbx,ta
                            ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)                       
     real,    intent(out):: ReGraw(nf),ImGraw(nf)
     real                :: ReGrawEa,ImGrawEa,ReGrawEb,ImGrawEb
-    real                :: E,fac,TempReG,TempImG 
+    real                :: E,fac
     real                :: f,DelAB_nu,g_nu
     real                :: tau_d,phase_d,flo,fhi
-    complex             :: W0,W1,W2,W3,Sraw,cexp_d,cexp_phi,Stemp
+    complex             :: W0,W1,W2,W3,cexp_d,cexp_phi,Stemp
     integer             :: i,j,m
 
     call energy_bounds(nex,Emin,Emax,Ea1,Ea2,Eb1,Eb2)
