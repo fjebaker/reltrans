@@ -12,8 +12,8 @@ subroutine radfunctions_dens(verbose,xe,rin,rnmax,eta_0,logxip,lognep,spin,h,Gam
     double precision, intent(IN)   :: rlp(ndelta,nlp), dcosdr(ndelta,nlp), cosd(ndelta,nlp), contx_int(nlp)
     double precision :: rlp_column(ndelta),dcosdr_column(ndelta),cosd_column(ndelta), dgsofac
     double precision, intent(INOUT):: logxir(xe), gsdr(xe), logner(xe)
-    integer          :: i, kk, get_index, get_env_int, l, m, verbose
-    double precision :: rp, logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp), dglpfacthick
+    integer          :: i, kk, get_index, l, m, verbose
+    double precision :: logxinorm, lognenorm,  mus, interper, newtex, mui, dinang, gsd(nlp)
     double precision :: xi_lp(xe,nlp), logxi_lp(xe,nlp), logxip_lp(nlp), xitot, xiraw, mylogne, mudisk, gsd_temp
     double precision, allocatable :: rad(:)
 

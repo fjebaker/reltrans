@@ -12,6 +12,7 @@ FC = gfortran
 CFLAGS := -fno-omit-frame-pointer
 
 FFLAGS := -DHAVE_INLINE -fPIC -fno-automatic -fno-second-underscore \
+		  -Wall \
 		  -fno-omit-frame-pointer \
 		  -fopenmp \
 		  -I$(BUILD)/include \

@@ -18,11 +18,11 @@ subroutine write_components(ne,ear,nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,g
     real   , intent(INOUT) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real :: fac
-    real :: tempRe,tempIm,dE, corr
+    real :: dE
     real :: f,flo,fhi,floHz,fhiHz
     double precision :: fc
     double precision, parameter :: pi = acos(-1.d0)
-    integer :: i,j,m
+    integer :: i,j
     !indiRTdual components transfer functions (S) and cross spectrum (G) dynamic allocation
     real, dimension(:,:), allocatable :: ReScont,ImScont,ReSrev,ImSrev
     real, dimension(:,:), allocatable :: ReSpiv,ImSpiv,ImSion,ReSion
@@ -286,8 +286,7 @@ subroutine components(nex,earx,nf,flo,fhi,nlp,contx,tauso,gso,ReW0,ImW0,ReW1,ImW
     real   , intent(INOUT) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real   , intent(INOUT) :: ReScont(nex,nf),ImScont(nex,nf),ReSrev(nex,nf),ImSrev(nex,nf)
     real   , intent(INOUT) :: ReSpiv(nex,nf),ImSpiv(nex,nf),ReSion(nex,nf),ImSion(nex,nf)
-    real E,fac,fhi,beta,f,phase_d,phase_p,tau_d,tau_p
-    real corr, contx_sum(nex)
+    real E,fac,fhi,f,phase_d,phase_p,tau_d,tau_p
     complex, dimension(:,:), allocatable :: Scont,Sreverb,Spivot,Sion
     ! complex Stemp,Scont(nex,nf),Sreverb(nex,nf),Spivot(nex,nf),Sion(nex,nf)
     complex Stemp,cexp_d,cexp_p,cexp_phi,W0,W1,W2,W3
@@ -383,8 +382,7 @@ subroutine components_nocoh(nex,earx,nf,flo,fhi,nlp,contx,absorbx,tauso,gso,ReW0
     real, intent(IN) :: ReW0(nlp,nex,nf),ImW0(nlp,nex,nf),ReW1(nlp,nex,nf),ImW1(nlp,nex,nf)
     real, intent(IN) :: ReW2(nlp,nex,nf),ImW2(nlp,nex,nf),ReW3(nlp,nex,nf),ImW3(nlp,nex,nf)
     real, intent(IN) :: g(nlp),DelAB(nlp),boost,z,gso(nlp),Gamma,eta,h(nlp),tauso(nlp)
-    real E,fac,flo,fhi,beta,f,phase_d,tau_d
-    real contx_sum(nex),corr
+    real E,fac,flo,fhi,f,phase_d,tau_d
     !these are the component arrays for each lamp post separately, before the cross spectrum
     real, dimension(:,:,:), allocatable :: ReSpiv,ImSpiv,ReScont,ImScont,ReSrev,ImSrev, ReSion,ImSion
     ! real ReScont(nlp,nex,nf),ImScont(nlp,nex,nf),ReSrev(nlp,nex,nf),ImSrev(nlp,nex,nf)

@@ -14,9 +14,9 @@ subroutine init_cont(nlp, a, h, zcos, Cutoff_s, Cutoff_obs, logxi, logne, &
     real            , intent(out)   :: earx(0:nex),contx(nex,nlp)
     double precision, intent(out)   :: fcons,contx_int(nlp)
     
-    integer                         :: m, i
+    integer                         :: m
     real                            :: Cutoff_s,Cutoff_obs,Eintegrate
-    double precision                :: lacc,ell13pt6,get_lacc,get_fcons,dgsofac
+    double precision                :: lacc,ell13pt6,get_lacc,get_fcons
 
     
     if (nlp .eq. 1) then 

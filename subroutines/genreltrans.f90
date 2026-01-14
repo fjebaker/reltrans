@@ -62,7 +62,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real, allocatable :: fix(:)
     !relativistic parameters and limit on rin and h
     double precision :: rmin, rh 
-    double precision :: height(nlp),contx_int(nlp)
+    double precision :: contx_int(nlp)
     !lens needs to be allocatable to save it. 
     double precision, allocatable :: frobs(:),frrel(:)
     !TRANSFER FUNCTIONS and Cross spectrum dynamic allocation + variables
@@ -73,11 +73,11 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real   , dimension(:,:)      , allocatable :: ReSraw,ImSraw,ReSrawa,ImSrawa,ReGrawa,ImGrawa,ReG,ImG                                                
     !double precision :: frobs(nlp), frrel(nlp)  !reflection fraction variables (verbose)
     !Radial and angle profile 
-    integer                       :: mubin, rbin, ibin
+    integer                       :: mubin, rbin
     real    :: contx(nex,nlp)
     real    :: mue, logxi0, reline_w0(nlp,nex), imline_w0(nlp,nex), photarx(nex), photerx(nex)
     real    :: absorbx(nex), ImGbar(nex), ReGbar(nex), Hx(nex), Hx_delta(nex),Hx_dlogxi(nex)
-    real    :: ReGx(nex),ImGx(nex),ReS(ne),ImS(ne)
+    real    :: ReS(ne),ImS(ne)
     !variable for non linear effects
     integer ::  DC, ionvariation
     real    :: photarx_1(nex), photarx_2(nex), photarx_delta(nex), photarx_dlogxi(nex)
@@ -90,14 +90,12 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     double precision :: fhisave, flosave
     !Functions
     integer          :: i, j
-    double precision :: disco, dgsofac
+    double precision :: disco
     ! New  
-    double precision :: fcons,get_fcons,contx_temp!,ell13pt6,lacc,get_lacc,
+    double precision :: fcons,contx_temp!,ell13pt6,lacc,get_lacc,
     real             :: Gamma0,logne,Cutoff_0,thetae,logxi1, logxi2
     integer          :: Cp_cont
     real time_start,time_end        !runtime stuff
-    integer env_test
-    integer get_env_int
  
     data firstcall /.true./
     data Cpsave/2/
