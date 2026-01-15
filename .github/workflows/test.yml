@@ -1,0 +1,26 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - ci
+
+jobs:
+  xspec:
+    runs-on: ubuntu-latest
+    container: fjebaker/heasoft:ci-6.33.1-amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Build debug reltrans
+        run: |
+          cd utils
+          make DEBUG=1 SANITIZE=1
+          make DEBUG=1 SANITIZE=1 exe
+      - name: Smoke test
+        run: |
+          ./utils/build/bin/relcli
