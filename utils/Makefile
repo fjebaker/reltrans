@@ -2,17 +2,18 @@ BUILD  := build
 ROOTDIR := ..
 HEADAS_LIB := ${HEADAS}/lib
 HEADAS_INCLUDE := ${HEADAS}/include
+DEBUG = 0
+SANITIZE = 0
 
 # This are configurable from the command line
 TARGET = $(shell uname)
 FC = gfortran
 
-CFLAGS := -g -fno-omit-frame-pointer
+CFLAGS := -fno-omit-frame-pointer
 
-FFLAGS := -DHAVE_INLINE -g -fPIC -fno-automatic -fno-second-underscore \
+FFLAGS := -DHAVE_INLINE -fPIC -fno-automatic -fno-second-underscore \
 		  -fno-omit-frame-pointer \
 		  -fopenmp \
-		  -O3 \
 		  -I$(BUILD)/include \
 		  -I$(HEADAS_INCLUDE) \
 		  -J$(BUILD)/cache \
@@ -20,6 +21,19 @@ FFLAGS := -DHAVE_INLINE -g -fPIC -fno-automatic -fno-second-underscore \
 
 LDFLAGS := -lXSFunctions -lXSModel -lfftw3 -lcfitsio \
 		   -L$(BUILD)/lib -L$(HEADAS_LIB)
+
+ifeq ($(DEBUG),1)
+	FFLAGS += -g
+	CFLAGS += -g
+else
+	FFLAGS += -O3
+	CFLAGS += -O3
+endif
+
+ifeq ($(SANITIZE),1)
+	FFLAGS += -fsanitize=address
+	CFLAGS += -fsanitize=address
+endif
 
 ifeq ($(TARGET),Linux)
 	FFLAGS += -shared -export-dynamic
