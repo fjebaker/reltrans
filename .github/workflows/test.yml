@@ -23,4 +23,5 @@ jobs:
           make DEBUG=1 SANITIZE=1 exe
       - name: Smoke test
         run: |
-          ./utils/build/bin/relcli
+          cd utils
+          ./build/bin/relcli
