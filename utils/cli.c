@@ -68,7 +68,7 @@ int main() {
   const char *output_file = "output.txt";
   const float e_min = 0.1;
   const float e_max = 1000.0;
-  int e_num = 1000;
+  int e_num = 1001;
 
   float *energy = malloc(sizeof(float) * e_num);
   if (energy == NULL) {
@@ -94,6 +94,7 @@ int main() {
 
   clock_t time = clock();
   int ifl = 1;
+  e_num -= 1;
   tdreltransdcp_(energy, &e_num, (float *)&params, &ifl, output);
   time = clock() - time;
 
