@@ -53,11 +53,12 @@ all: $(BUILD) $(BUILD)/lib/libreltrans.$(SHARED_EXT)
 exe: $(BUILD)/bin/relcli
 
 $(BUILD)/bin/relcli: ./cli.c $(BUILD)/lib/libreltrans.$(SHARED_EXT)
-	$(CC) $(CFLAGS) cli.c -o $(BUILD)/bin/relcli -Wl,-rpath,$(BUILD)/lib \
-		-L$(BUILD)/lib -lgfortran -lc -lreltrans -lm -lmvec
+	$(CC) $(CFLAGS) cli.c -o $(BUILD)/bin/relcli \
+		-L$(BUILD)/lib -lgfortran -lc -lm -lmvec \
+		-Wl,-rpath,'$$ORIGIN/../lib' -lreltrans
 
 $(BUILD)/lib/libreltrans.$(SHARED_EXT): $(BUILD)/cache/wrappers.o
-	$(FC) $(LDFLAGS) $(FFLAGS) $(BUILD)/cache/wrappers.o -o $@
+	$(FC) $(FFLAGS) $(BUILD)/cache/wrappers.o -o $@ $(LDFLAGS)
 
 $(BUILD)/cache/%.o: $(ROOTDIR)/%.f90
 	$(FC) $(FFLAGS) -c $< -o $@
