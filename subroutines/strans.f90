@@ -571,13 +571,12 @@ subroutine sum_multiple_lampposts(                                             &
 
         ! Time lag between direct and reflected photons
         if (non_relativistic) then
-            tau(m) = sqrt(re**2+(args%h(m)-args%honr*re)**2)                   &
-                     - re*(sin0*sindisk*cos(phie)+args%mu0*args%mudisk )       &
+            tau(m) = - re*(sin0*sindisk*cos(phie)+args%mu0*args%mudisk )       &
                      + args%h(1)*args%mu0
             tau(m) = (1.d0+args%zcos)*tau(m)
         else
             ! Interpolate (or extrapolate) the time function
-            tausd = interper(rlp(:,m),tlp(:,m),ndelta,re,kk)
+            tausd = 0.0
             tau(m) = (1.d0+args%zcos)*(tausd+taudo-tauso(1))
         endif
 
