@@ -124,7 +124,7 @@ jobs:
         run: |
           export RELTRANS_TABLES="$(realpath reltrans-data)"
           # Change directory to avoid any namespace / Python module clashes
-          pytest -vvv test
+          pytest -vvv test --plot-always=True
       - name: Upload coverage to Codecov
         # Only upload once, and on the ubuntu latest machine.
         if: ${{ matrix.os == 'ubuntu-latest' }}
@@ -138,10 +138,13 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
+            const fs = require('fs');
+            const imageData = fs.readFileSync('test/_plots/test_basic_invocation.jpg', 'base64');
+            const imageDataUri = `data:image/jpeg;base64,${imageData}`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'Test message.'
+              body: 'Test message.\n\n![test image](${imageDataUri})'
             })
 
