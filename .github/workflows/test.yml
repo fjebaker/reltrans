@@ -135,7 +135,7 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Post plots to PR.
-        if: github.event_name == 'pull_request'
+        if: ${{ matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request' }}
         uses: actions/github-script@v9
         with:
           script: |
