@@ -57,7 +57,7 @@ jobs:
         uses: fortran-lang/setup-fortran@v1
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade numpy pytest xspectrampoline
+          python3 -m pip install --upgrade numpy pytest xspectrampoline matplotlib
       - name: Compile pyreltrans and install
         run: |
           python3 ./dist-package.py
