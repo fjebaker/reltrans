@@ -352,6 +352,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use saved_variables
     use telematrix2
     use rtconstants
+    use kerrz, only: kerr_metric, krz_KerrMetric_init
     implicit none
     ! Constants
     double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -387,9 +388,13 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! make arrays static so its values are kept between function calls
 
     config => global_config
+
     call unwrap_arguments(model_args, nlp, dset, param, Cp)
     call config_frequency(config, model_args)
     call arguments_check(config, model_args)
+
+    ! Setup kerrz things for these parameters
+    kerr_metric = krz_KerrMetric_init(1.0d0, model_args%a)
 
     ! TODO: check to make sure nlp hasn't changed, else many arrays need to be
     ! freed and re-allocated
