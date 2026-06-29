@@ -72,7 +72,7 @@ contains
 end module m_rtrans
 
 !-----------------------------------------------------------------------
-subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
+subroutine rtrans(config, model_args, arrays, dset, ne, frobs, frrel)
     ! Code to calculate the transfer function for an accretion disk.
     ! This code first does full GR ray tracing for a camera with impact parameters < bmax
     ! It then also does straight line ray tracing for impact parameters >bmax
@@ -82,7 +82,6 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     !
     ! Non-standard arguments:
     !
-    ! d: Distance of the source
     ! dset: dset=1 means calculate ionization from distance, dset=0 means ignore
     ! distance
     ! ne: Number of energy bins
@@ -101,7 +100,6 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
 
     type(t_config), intent(inout) :: config
     type(t_model_arguments), intent(in) :: model_args
-    double precision, intent(in) :: d
     integer, intent(in) :: ne, dset
 
     type(t_arrays), intent(inout) :: arrays
@@ -186,7 +184,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         if (dotrace) then
             call trace_disk_observer(args%conf%nro, args%conf%nphi, rn,        &
                  args%mueff,args%model%muobs, args%model%a, args%r_isco,       &
-                 args%model%rout, args%mudisk, d)
+                 args%model%rout, args%mudisk, config%distance)
             spinsav = args%model%a
             musav = args%model%muobs
             routsav = args%model%rout

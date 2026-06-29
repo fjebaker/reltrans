@@ -47,10 +47,22 @@ module common_types
         double precision :: muobs
     end type t_model_arguments
 
+    type :: t_cached_parameters
+        type(t_model_arguments) :: args
+        ! Previous number of frequency bins, and low and high frequency:
+        integer :: nf = -1
+        double precision :: flo, fhi
+    end type t_cached_parameters
+
     type :: t_config
         integer :: verbose = 0
         ! firstcall: is this the first time the model has been called?
         logical :: firstcall = .true., needtrans = .true., needconv = .true.,test = .false.
+        ! Disable the parameter caching. If this is true, then `needs_check`
+        ! will always configure everything to be recalculated regardless of the
+        ! state of the cache.
+        logical :: disable_cache = .false.
+
         ! me: Number of mue bins
         ! xe: Number of logr bins: bins 1:xe-1 are logarithmically spaced, bin
         ! xe is everything else
@@ -64,6 +76,9 @@ module common_types
         integer :: nphi = 200, nro = 200
         ! Non-relativistic grid size:
         integer :: nron = 100, nphin = 100
+
+        ! Observer-to-black-hole distance, set in `do_first_call_setup`
+        double precision :: distance
 
         ! The number of time bins used for calculating the impulse response function:
         integer :: nt = 2**9
@@ -87,10 +102,12 @@ module common_types
         ! read out in another way, this defaults to false.
         logical :: calculate_impulse_response = .false.
 
-        ! internal frequency grid
-        ! Number of frequency bins
+        ! Internal frequency grid. These values are all set in the
+        ! `config_frequency` subrtouine.
+        ! Number of frequency bins:
         integer :: nf
         real :: f, fac
+        ! Frequency center, low, and high:
         double precision :: fc, flo, fhi
         ! internal frequency grid, for when we do lag/frequency spectra
         integer :: fbinx
@@ -111,6 +128,9 @@ module common_types
         integer :: DC, ionvariation
         real :: dlogxi1, dlogxi2
 
+        ! Parameters that are cached and saved between successive runs of the model.
+        type(t_cached_parameters) :: cached
+
      end type t_config
 
     type :: t_arrays
@@ -128,6 +148,9 @@ module common_types
         real, dimension(:,:,:), allocatable :: ReW0, ImW0, ReW1, ImW1
         real, dimension(:,:,:), allocatable :: ReW2, ImW2, ReW3, ImW3
         real, dimension(:,:), allocatable :: ReSraw, ImSraw, ReSrawa, ImSrawa, ReGrawa, ImGrawa, ReG, ImG
+
+        ! Observed fraction, reflection fraction, lensing factors.
+        double precision, dimension(:), allocatable :: frobs, frrel, lens
     end type t_arrays
 
     type(t_config), target, save :: global_config
@@ -138,7 +161,7 @@ contains
       ! a fresh start of the model
       global_config%firstcall = .true.
     end subroutine reset_reltrans
-  
+
 
     ! Unwraps the arguments from a parameter array into `args`.
     subroutine unwrap_arguments(args, nlp, dset, params, cutoff_powerlaw)
@@ -196,6 +219,7 @@ contains
     ! - Checks `a`, `rin`, `h` are in bounds.
     ! - Sets the inner radius to the ISCO.
     subroutine arguments_check(config, model_args)
+        use rtconstants, only: MODE_CROSS_SPEC_REAL_REF_FOLDED
         type(t_config), intent(inout) :: config
         type(t_model_arguments), intent(inout) :: model_args
         integer :: i
@@ -224,7 +248,174 @@ contains
                 model_args%h(i) = 1.5d0 * config%rh
             end if
         end do
+
+        ! Decide if this is the DC component/time averaged spectrum or not
+        if (config%flo .lt. tiny(config%flo) .or. config%fhi .lt. tiny(config%fhi))then
+            config%DC = 1
+            model_args%g = 0.0
+            model_args%DelAB = 0.0
+            model_args%DelA = 0.0
+            model_args%ReIm = MODE_CROSS_SPEC_REAL_REF_FOLDED
+            model_args%eta = model_args%eta_0
+            ! this is an ugly hack for the double LP model to calculate the time-
+            ! averaged spectrum
+            model_args%beta_p = 1.
+        else
+            config%DC = 0
+            model_args%boost = abs(model_args%boost)
+        end if
+
+        ! Determine what needs to be recalculated.
+        call need_check(config, model_args)
     end subroutine arguments_check
+
+    subroutine need_check(config, model_args)
+        !> Checks if reltrans needs to calculate the kernel. Updated fields in
+        !> `config` with the outcome of the checks.
+    ! Parameters that rtrans() is sensitive to:
+    ! (1-9):   h1,h2,a,inc,rin,rout,zcos,Gamma,logxi/Dkpc
+    ! (11):    lognep
+    ! (13):    eta_0
+    ! (18):    qboost
+    ! (20-22): honr,b1,b2
+    ! (31):    Anorm
+    ! Also need to check if the frequency range changes
+    !
+    ! Parameters the restframe spec is sensitive to
+    ! (10):     Afe
+    ! (12):    Ecut/kTe
+
+    !!! Arg:
+      ! INPUTS
+      !   Cp:        defines which model
+      !   Cpsave:    saved Cp
+      !   param:     parameter array
+      !   paramsave: saved array
+      !   fhi:       high frequency range
+      !   flo:       low frequency range
+      !   fhisave:   saved frequency
+      !   flosave:   saved frequency
+      !   nf:        number of frequency bins
+      !   nfsave:    saved number
+      ! OUTPUTS
+      !   needtrans: if true, we must do the kernel calculation
+    !> Checks if reltrans needs to calculate the kernel
+    !> Parameters that rtrans() is sensitive to:
+    !> (1-9):   h1,h2,a,inc,rin,rout,zcos,Gamma,logxi/Dkpc
+    !> (11):    lognep
+    !> (13):    eta_0
+    !> (18):    qboost
+    !> (20-22): honr,b1,b2
+    !> (31):    Anorm
+    !> Also need to check if the frequency range changes
+    !>
+    !> Parameters the restframe spec is sensitive to
+    !> (10):     Afe
+    !> (12):    Ecut/kTe
+    !> Inputs:
+    !>     Cp:        defines which model
+    !>     Cpsave:    saved Cp
+    !>     param:     parameter array
+    !>     paramsave: saved array
+    !>     fhi:       high frequency range
+    !>     flo:       low frequency range
+    !>     fhisave:   saved frequency
+    !>     flosave:   saved frequency
+    !>     nf:        number of frequency bins
+    !>     nfsave:    saved number
+    !> Outputs:
+    !>     needtrans: if true, we must do the kernel calculation
+    !>     neecconv:  if true, we must do the convolution
+        implicit none
+        type(t_config), intent(inout) :: config
+        type(t_model_arguments), intent(in) :: model_args
+        real            , parameter   :: tol = 1e-7
+        double precision, parameter   :: dtol = 1e-5
+
+        ! functions
+        integer :: get_env_int
+
+        if (config%disable_cache) then
+            config%needtrans = .true.
+            config%needconv = .true.
+            return
+        end if
+
+        config%needtrans = .false.
+        config%needconv = .false.
+
+        ! First check the parameter entries:
+        if (abs(model_args%h(1) - config%cached%args%h(1)) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%h(2) - config%cached%args%h(2)) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%a - config%cached%args%a) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%inc - config%cached%args%inc) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%rin - config%cached%args%rin) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%rout - config%cached%args%rout) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%zcos - config%cached%args%zcos) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%gamma - config%cached%args%gamma) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%logxi - config%cached%args%logxi) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%lognep - config%cached%args%lognep) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%eta_0 - config%cached%args%eta_0) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%qboost - config%cached%args%qboost) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%honr - config%cached%args%honr) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%b1 - config%cached%args%b1) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%b2 - config%cached%args%b2) > tol) then
+            config%needtrans = .true.
+        end if
+        if (abs(model_args%Anorm - config%cached%args%Anorm) > tol) then
+            config%needtrans = .true.
+        end if
+
+        ! Now check if frequency range and frequency grid have changed
+        if( config%nf .ne. config%cached%nf ) then
+            config%needtrans = .true.
+        else if( abs(1.- (config%fhi / config%cached%fhi) ) > dtol) then
+            config%needtrans = .true.
+        else if( abs(1. - (config%flo - config%cached%flo) ) > dtol) then
+            config%needtrans = .true.
+        end if
+
+        ! Now for needconv
+        if( config%needtrans ) config%needconv = .true.
+        if( model_args%cp .ne. config%cached%args%cp ) config%needconv = .true.
+        if (abs(model_args%afe - config%cached%args%afe) > tol) then
+            config%needconv = .true.
+        end if
+        if (abs(model_args%cutoff_obs - config%cached%args%cutoff_obs) > tol) then
+            config%needconv = .true.
+        end if
+        if (abs(model_args%cutoff_s - config%cached%args%cutoff_s) > tol) then
+            config%needconv = .true.
+        end if
+    end subroutine need_check
 
     ! Read in environment variables that configure reltrans
     subroutine read_environment_variables(config)
@@ -246,6 +437,11 @@ contains
         ! include ionisation changes
         config%ionvar = get_env_int("ION_VAR", 1)
 
+        ! Whether to disable the parameter cache system.
+        if (0 .ne. get_env_int("REV_NOSAV", 0)) then
+            config%disable_cache = .true.
+        end if
+
         ! these are set in `env_variables`
         ! seed for simulation
         idum = get_env_int("SEED_SIM", -2851043)
@@ -258,7 +454,7 @@ contains
         else
            config%test = .true.
         end if
-        
+
         ! this is from xillver_tables, sets the paths where the tables are read
         ! from
         path_tables = get_env_char("RELTRANS_TABLES", './')
@@ -277,7 +473,7 @@ contains
         endif
         write(*,*) 'VERBOSE is ', config%verbose
         write(*,*) 'REFVAR is ', config%refvar
-        write(*,*) 'IONVAR is ', config%ionvar 
+        write(*,*) 'IONVAR is ', config%ionvar
         write(*,*)"----------------------------------------------------"
 
       end subroutine read_environment_variables
@@ -324,11 +520,12 @@ contains
         integer :: i
         logical :: needs_allocating
         double precision :: fhisave, flosave
-        double precision :: fhicheck, flocheck 
+        double precision :: fhicheck, flocheck
         double precision, parameter   :: dtol = 1e-5
 
+        ! TODO: magic constants should be named constants
         fhicheck = fhisave /(4.92695275718945d-06 * model_args%Mass)
-        flocheck = flosave /(4.92695275718945d-06 * model_args%Mass)            
+        flocheck = flosave /(4.92695275718945d-06 * model_args%Mass)
 
         if ( abs(1. - model_args%floHz/flocheck) .gt. dtol ) then
             needs_allocating = .true.
@@ -350,7 +547,7 @@ contains
                     *(model_args%fhiHz                                         &
                     / model_args%floHz)**(real(i) / real(config%nf))
             end do
-                       
+
             ! reallocate the transfer function arrays
             if (allocated(arrays%ker_W0)) deallocate(arrays%ker_W0)
             allocate(arrays%ker_W0(model_args%nlp,nex,config%nf,config%me,config%xe))
@@ -412,5 +609,17 @@ contains
             if (allocated(arrays%ImG)) deallocate(arrays%ImG)
             allocate(arrays%ImG(nex,config%nf))
         end if
+
+        ! (Re)allocate lensing/reflection fraction arrays if necessary:
+        ! TODO: check the length of the arrays, as `nlp` is unlikely to have
+        ! changed between calls.
+        if (config%needtrans) then
+           if (allocated(arrays%lens)) deallocate(arrays%lens)
+           allocate (arrays%lens(model_args%nlp))
+           if (allocated(arrays%frobs)) deallocate(arrays%frobs)
+           allocate (arrays%frobs(model_args%nlp))
+           if (allocated(arrays%frrel)) deallocate(arrays%frrel)
+           allocate (arrays%frrel(model_args%nlp))
+        endif
     end subroutine
 end module common_types

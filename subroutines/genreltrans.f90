@@ -314,6 +314,50 @@ contains
             end do
         end do
     end subroutine do_convolutions
+
+    subroutine do_first_call_setup(config, model_args, arrays)
+        use conv_mod, only: init_fftw_allconv
+        use rtconstants, only: IS_DEBUG_BUILD
+        use common_types, only: setup_arrays
+        type(t_config), intent(inout) :: config
+        type(t_arrays), intent(inout) :: arrays
+        type(t_model_arguments), intent(inout) :: model_args
+
+        call init_fftw_allconv(IS_DEBUG_BUILD)
+        ! Initialise environment and allocate all arrays.
+        call read_environment_variables(config)
+        call setup_global_arrays(config, model_args%nlp)
+        call setup_arrays(config, arrays, model_args%nlp)
+
+        config%firstcall = .false.
+        config%needtrans = .true.
+        config%needconv = .true.
+        !this is needed to reallocate arrays with realloc_arrays, if firstcall
+        !is set to true externally
+        config%cached%nf = -1
+        ! set sensible distance for observer from the BH
+        config%distance = max(1.0d4, 2.0d2 * config%rnmax**2)
+
+        ! This is needed to force the run of the GRtrace routine (?)
+        ! TODO: double check this
+        config%cached%args%a = -2.0d0
+        config%cached%args%cp = -2
+
+        ! Finally, let the people know what they are witnessing!
+        call print_header()
+    end subroutine do_first_call_setup
+
+    subroutine update_cache_parameters(config, model_args)
+        type(t_config), intent(inout) :: config
+        type(t_model_arguments), intent(in) :: model_args
+        ! Update the cached model arguments.
+        config%cached%args = model_args
+        ! Update the state of the frequency grid.
+        config%cached%fhi = config%fhi
+        config%cached%flo = config%flo
+        config%cached%nf = config%nf
+    end subroutine update_cache_parameters
+
 end module m_genreltrans
 
 
@@ -362,100 +406,35 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     real, intent(out) :: photar(ne)
     ! Variables of the subroutine
     ! initializer
-    integer :: m, prev_nf, Cpsave, i, j, Cp_cont
-    double precision :: d
+    integer :: m, i, j, Cp_cont
     real :: f, fac, dE, ear(0:ne)
-    ! relativistic parameters and limit on rin and h
-    ! lens needs to be allocatable to save it.
-    double precision, allocatable :: frobs(:), frrel(:)
     real :: photerx(nex), absorbx(nex), ReS(ne), ImS(ne)
-    double precision :: fhisave, flosave, fcons, contx_temp
+    double precision :: fcons, contx_temp
 
     real time_start, time_end !runtime stuff
 
-    ! SAVE
-    real, save :: paramsave(32)
-
-    data Cpsave/2/
-    data prev_nf /-1/
-    ! Save the first call variables
-    save d, fhisave, flosave, prev_nf, frobs, frrel, Cpsave
-
     type(t_config), pointer :: config
+    ! The arrays are saved, as they can be allocated once and only need to be
+    ! modified if the model parameters change.
     type(t_arrays), save :: arrays
     type(t_model_arguments) :: model_args
-    ! make arrays static so its values are kept between function calls
 
-    config => global_config
-    call unwrap_arguments(model_args, nlp, dset, param, Cp)
-    call config_frequency(config, model_args)
-    call arguments_check(config, model_args)
-
-    ! TODO: check to make sure nlp hasn't changed, else many arrays need to be
-    ! freed and re-allocated
-
-    if (config%firstcall) then
-        call init_fftw_allconv(IS_DEBUG_BUILD)
-        ! initialise environment and allocate all arrays
-        call read_environment_variables(config)
-        call setup_global_arrays(config, model_args%nlp)
-        call setup_arrays(config, arrays, model_args%nlp)
-
-        config%firstcall = .false.
-        config%needtrans = .true.
-        config%needconv = .true.
-        !this is needed to reallocate arrays with realloc_arrays, if firstcall 
-        !is set to true externally
-        prev_nf = 0 
-        ! set sensible distance for observer from the BH
-        d = max(1.0d4, 2.0d2 * config%rnmax**2)
-
-        spinsav = -2.d0 !this is needed to force the run of the GRtrace routine
-
-        ! finally, let the people know what they are witnessing!
-        call print_header()
-    end if
-
-    ! reallocated frequency dependent arrays
-    call realloc_arrays(config, model_args, arrays, prev_nf, flosave, fhisave)
-    
     ifl = 1
+    ! Bind the local config to the singleton global configuration.
+    config => global_config
 
-    ! Note: the two different calls are because for the double lP we set the
-    ! temperature from the coronal frame(s), but for the single
-    ! LP we use the temperature in the observer frame
+    ! Read in the arguments into the derived type structures.
+    call unwrap_arguments(model_args, nlp, dset, param, Cp)
+    ! Setup the frequency grids.
+    call config_frequency(config, model_args)
+    ! Check the arguments.
+    call arguments_check(config, model_args)
+    ! Reallocate arrays if needed.
+    call realloc_arrays(config, model_args, arrays, config%cached%nf, config%cached%flo, config%cached%fhi)
 
-    ! Decide if this is the DC component/time averaged spectrum or not
-    if (config%flo .lt. tiny(config%flo) .or. config%fhi .lt. tiny(config%fhi))then
-        config%DC = 1
-        model_args%g = 0.0
-        model_args%DelAB = 0.0
-        model_args%DelA = 0.0
-        model_args%ReIm = MODE_CROSS_SPEC_REAL_REF_FOLDED
-        model_args%eta = model_args%eta_0
-        ! this is an ugly hack for the double LP model to calculate the time-
-        ! averaged spectrum
-        model_args%beta_p = 1.
-    else
-        config%DC = 0
-        model_args%boost = abs(model_args%boost)
-    end if
-
-    ! Determine if I need to calculate the kernel
-    call need_check(model_args%Cp, Cpsave, param, paramsave, config%fhi,       &
-         config%flo, fhisave, flosave, config%nf, prev_nf, config%needtrans,   &
-         config%needconv)
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
     if (config%needtrans)then
-       ! allocate lensing/reflection fraction arrays if necessary
-       if (allocated(lens)) deallocate(lens)
-       allocate (lens(nlp))
-       if (allocated(frobs)) deallocate(frobs)
-       allocate (frobs(nlp))
-       if (allocated(frrel)) deallocate(frrel)
-       allocate (frrel(nlp))
-       ! Calculate the Kernel for the given parameters
-       call rtrans(config, model_args, arrays, dset, d, nex, frobs, frrel)
+       call rtrans(config, model_args, arrays, dset, nex, arrays%frobs, arrays%frrel)
        ! print *, 'gso ', gso(1)
     end if
     if (config%verbose .gt. 2) then
@@ -466,6 +445,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     ! set up the continuum spectrum plus relative quantities (cutoff
     ! energies, lensing/gfactors, luminosity, etc)
     call init_cont(config, model_args, arrays, Cp_cont, fcons, dset)
+
     if (dset .eq. 0) then
        call radfunctions_dens(config, model_args, arrays)
     else
@@ -475,8 +455,8 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
      ! do this for each lamp post, then find some sort of weird average?
     if (config%verbose .gt. 0) then
         write(*,*)"Observer's reflection fraction for each source:",           &
-                    model_args%boost*frobs
-        write(*,*)"Relxill reflection fraction for each source:", frrel
+                    model_args%boost*arrays%frobs
+        write(*,*)"Relxill reflection fraction for each source:", arrays%frrel
     end if
 
     if (config%verbose .gt. 2) call CPU_TIME (time_start)
@@ -712,10 +692,6 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         close(14)
     endif
 
-    fhisave = config%fhi
-    flosave = config%flo
-    prev_nf = config%nf
-    paramsave = param
-    Cpsave = model_args%Cp
+    call update_cache_parameters(config, model_args)
 end subroutine genreltrans
 ! -----------------------------------------------------------------------
