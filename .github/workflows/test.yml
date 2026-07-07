@@ -57,7 +57,8 @@ jobs:
         uses: fortran-lang/setup-fortran@v1
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade numpy pytest xspectrampoline kerrz-lib==0.2.2
+          python3 -m pip install --upgrade numpy pytest xspectrampoline
+          pip install --index-url https://test.pypi.org/simple/ kerrz-lib==0.3.0rc1
       - name: Compile pyreltrans and install
         run: |
           python3 ./dist-package.py
@@ -88,7 +89,8 @@ jobs:
         uses: fortran-lang/setup-fortran@v1
       - name: Install xspectrampoline for HEASoft
         run: |
-          python3 -m pip install --upgrade xspectrampoline pytest numpy kerrz-lib==0.2.2 matplotlib
+          python3 -m pip install --upgrade xspectrampoline pytest numpy matplotlib
+          pip install --index-url https://test.pypi.org/simple/ kerrz-lib==0.3.0rc1
       # TODO: do something better here:
       # We also need the fftw.f03 file, since that is currently not shipped
       # with xspectrampoline

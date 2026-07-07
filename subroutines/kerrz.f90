@@ -39,8 +39,8 @@ contains
         type(krz_FourVector) :: x_obs
 
         ! The default distance is `R_AT_INFINITY` unless provided by the user
+        dist = R_AT_INFINITY
         if (present(distance)) dist = distance
-        if (.not. present(distance)) dist = R_AT_INFINITY
 
         x_obs = krz_FourVector(t = 0.0d0, r = dist, th = acos(mu_obs),         &
             ph = 0.0d0)
