@@ -19,7 +19,7 @@ setup(
     author="Reltrans Contributors",
     author_email="todo@example.com",
     python_requires=">=3.6",
-    install_requires=["xspectrampoline", "numpy", "kerrz-lib==0.2.2"],
+    install_requires=["xspectrampoline", "numpy", "kerrz-lib==0.2.3rc11"],
     license="MIT",
     name=package_name,
     version=version,
