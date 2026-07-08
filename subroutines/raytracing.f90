@@ -319,14 +319,14 @@ contains
     !
     !> OUTPUTS
     !>     lens         Lensing factor
-    !>     delt         Source to observer time lag 
-        use kerrz, only: trace_lensing, LamppostContinuum
+    !>     delt         Source to observer time lag
+        use kerrz, only: trace_lensing, LamppostContinuum, R_AT_INFINITY
         implicit none
         double precision, intent(in)    :: a_spin,h, muobs
         double precision, intent(inout) :: cosdelta1
         double precision, intent(out)   :: lens, delt
         double precision :: d
-        double precision, parameter :: r_at_inf = 1.0d5
+        double precision, parameter :: r_at_inf = R_AT_INFINITY
         type(LamppostContinuum) :: continuum
         continuum = trace_lensing(h, r_at_inf, muobs)
         d = continuum%alpha**2 + continuum%beta**2

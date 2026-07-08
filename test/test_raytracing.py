@@ -10,7 +10,7 @@ def test_kerrz_observer_disk(reltrans):
     t, r, theta, phi = reltrans.kerrz_trace(aspin, cos0, alpha, beta)
     assert r == pytest.approx(3.3090221511440556, rel=1e-4)
     assert theta == pytest.approx(np.pi / 2.0, rel=1e-4)
-    assert t == pytest.approx(18000034.946610235, rel=1e-4)
+    assert t == pytest.approx(100024.22630171223, rel=1e-4)
 
 def test_kerrz_lamppost(reltrans):
     deltas = np.deg2rad(40)
@@ -30,12 +30,12 @@ def test_kerrz_lensing(reltrans):
 def test_getlens(reltrans):
     lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(45)))
     assert lens == pytest.approx(0.8021903320813445, rel=1e-6)
-    assert del_t == pytest.approx(11.629330638883403, rel=1e-6)
+    assert del_t == pytest.approx(11.629355830940767, rel=1e-6)
     assert cosdelta == pytest.approx(-0.7650576791076782, rel=1e-6)
 
     lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(2)))
     assert lens == pytest.approx(0.8021328267886598, rel=1e-6)
-    assert del_t == pytest.approx(8.716921714367345, rel=1e-6)
+    assert del_t == pytest.approx(8.717132648802362, rel=1e-6)
     assert cosdelta == pytest.approx(-0.9995113580864651, rel=1e-6)
 
     lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(88)))

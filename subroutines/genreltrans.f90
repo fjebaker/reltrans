@@ -352,7 +352,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
     use saved_variables
     use telematrix2
     use rtconstants
-    use kerrz, only: kerr_metric, krz_KerrMetric_init
+    use kerrz, only: kerr_metric, krz_KerrMetric_init, R_AT_INFINITY
     implicit none
     ! Constants
     double precision, parameter :: rnmax = 300.d0, dlogf = 0.09 !This is a resolution parameter (base 10)
@@ -413,7 +413,7 @@ subroutine genreltrans(Cp, dset, nlp, ear, ne, param, ifl, photar)
         !is set to true externally
         prev_nf = 0 
         ! set sensible distance for observer from the BH
-        d = max(1.0d4, 2.0d2 * config%rnmax**2)
+        d = R_AT_INFINITY
         ! Zero all of the saved parameters on the first call.
         paramsave = 0.0d0
         spinsav = -2.d0 !this is needed to force the run of the GRtrace routine

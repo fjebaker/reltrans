@@ -6,7 +6,7 @@ module kerrz
 
     ! This effective infinity r coordinate is for compatability with what YNOGK
     ! used to do.
-    double precision, parameter :: R_AT_INFINITY = 18000000.0d0
+    double precision, parameter :: R_AT_INFINITY = 1.0d5
 
     ! This is a singleton metric so that it does not need to be recalculated often.
     ! TODO: move this to `t_config` or related.
@@ -42,7 +42,7 @@ contains
         if (present(distance)) dist = distance
         if (.not. present(distance)) dist = R_AT_INFINITY
 
-        x_obs = krz_FourVector(t = 0.0d0, r = dist, th = acos(mu_obs),         &
+        x_obs = krz_FourVector(t = 0.0d0, r = dist, th = krz_acos(mu_obs),         &
             ph = 0.0d0)
 
         ! TODO: remove this once kerrz has fully face-on implemented
@@ -87,7 +87,7 @@ contains
         type(krz_ContinuumLamppost) :: continuum
         type(krz_FourVector) :: x
 
-        x = krz_FourVector(t=0.0d0, r=r_obs, th=acos(mu_obs), ph=0.0d0)
+        x = krz_FourVector(t=0.0d0, r=r_obs, th=krz_acos(mu_obs), ph=0.0d0)
 
         ! TODO: remove this once kerrz has fully face-on implemented
         if (abs(x%th) < 1d-4) then
@@ -98,7 +98,7 @@ contains
 
         ! Note the angle mapping to be consistent with the Reltrans convention.
         ! Also the sign change on beta.
-        cont = LamppostContinuum(lensing_factor=1.0/continuum%dcosd_dcosth,    &
+        cont = LamppostContinuum(lensing_factor=1.0d0/continuum%dcosd_dcosth,    &
             cos_delta = cos(pi - continuum%angle_delta),                       &
             time = continuum%res%x_final%t, alpha = continuum%alpha,           &
             beta = -continuum%beta)
