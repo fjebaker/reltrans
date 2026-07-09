@@ -433,7 +433,7 @@ def test_strans_routines_grtrace_outputs(reltrans, assert_snapshot):
     rin = 1.2369694567256766
     rout = 1000.0
     mudisk = 0.0
-    distance = 18000000.0
+    distance = 1e5
 
     rn, domega = reltrans.getrgrid(rnmin, rnmax, mueff, nro, nphi)
 
