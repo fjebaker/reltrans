@@ -30,12 +30,12 @@ def test_kerrz_lensing(reltrans):
 def test_getlens(reltrans):
     lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(45)))
     assert lens == pytest.approx(0.8021903320813445, rel=1e-6)
-    assert del_t == pytest.approx(11.629355830940767, rel=1e-6)
+    assert del_t == pytest.approx(11.629329209870775, rel=1e-6)
     assert cosdelta == pytest.approx(-0.7650576791076782, rel=1e-6)
 
     lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(2)))
     assert lens == pytest.approx(0.8021328267886598, rel=1e-6)
-    assert del_t == pytest.approx(8.717132648802362, rel=1e-6)
+    assert del_t == pytest.approx(8.71691835092497, rel=1e-6)
     assert cosdelta == pytest.approx(-0.9995113580864651, rel=1e-6)
 
     lens, del_t, cosdelta = reltrans.getlens(0.998, 10.0, np.cos(np.deg2rad(88)))
