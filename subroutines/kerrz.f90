@@ -42,7 +42,7 @@ contains
         if (present(distance)) dist = distance
         if (.not. present(distance)) dist = R_AT_INFINITY
 
-        x_obs = krz_FourVector(t = 0.0d0, r = dist, th = krz_acos(mu_obs),         &
+        x_obs = krz_FourVector(t = 0.0d0, r = dist, th = acos(mu_obs),         &
             ph = 0.0d0)
 
         ! TODO: remove this once kerrz has fully face-on implemented
@@ -87,7 +87,7 @@ contains
         type(krz_ContinuumLamppost) :: continuum
         type(krz_FourVector) :: x
 
-        x = krz_FourVector(t=0.0d0, r=r_obs, th=krz_acos(mu_obs), ph=0.0d0)
+        x = krz_FourVector(t=0.0d0, r=r_obs, th=acos(mu_obs), ph=0.0d0)
 
         ! TODO: remove this once kerrz has fully face-on implemented
         if (abs(x%th) < 1d-4) then
