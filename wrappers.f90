@@ -75,7 +75,7 @@ subroutine fbreltransWIp(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: corona_config = -1 ! Use ring-like corona.
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(21), photar(ne), par(32)
+  real    :: ear(0:ne), param(22), photar(ne), par(32)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter
   dset = 0   !dset=0 means distance is not set, logxi set instead
