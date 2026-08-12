@@ -122,11 +122,9 @@ def _wrap_trace_disk_observer(f, nphi, rn, mueff, mu0, spin, rmin, rout, mudisk,
         ct.byref(d_c),
     )
 
-
 def is_c_double(a):
     b = a if isinstance(a, ct.c_double) else ct.c_double(a)
     return b
-
 
 @dataclasses.dataclass
 class DCP_Parameters:
@@ -214,6 +212,53 @@ class PL_Parameters:
     # 19 pivoting parameter: little g
     g: float = 0.0
     # 20 telescope response choise
+    telescope_response: float = 1.0
+
+    def to_numpy_array(self) -> np.ndarray:
+        return np.array(dataclasses.astuple(self), dtype=np.float32)
+
+
+@dataclasses.dataclass
+class Ring_Parameters:
+    # The ring-corona radius (rg)
+    radius: float = 4.0
+    # The ring-corona opening angle (degrees)
+    angle: float = 45.0
+    # Spin
+    a: float = 0.998
+    # Inclination (degrees)
+    inc: float = 30.0
+    # Inner radius
+    rin: float = -1.0
+    # Outer radius
+    rout: float = 1e3
+    # Cosmological redshift
+    zcos: float = 0.0
+    # Photon index
+    gamma: float = 2.0
+    # logξ ionisation parameter
+    logxi: float = 3.0
+    # Iron abundance
+    afe: float = 1.0
+    # Electron abundance
+    lognep: float = 15.0
+    # Electron temperature in observer frame
+    kte: float = 60.0
+    # Hydrogen column density
+    nh: float = 0.0
+    # Boosting factor (ad-hoc normalisation)
+    boost: float = 1.0
+    # Black hole mass in solar units
+    mass: float = 4.6e7
+    # Lowest frequency in band
+    flo_hz: float = 0.0
+    # Highest frequency in band
+    fhi_hz: float = 0.0
+    # 1 -> Re, 2 -> Im, 3 -> modulus, 4 -> time lag, 5 -> folded modulus, 6 -> folded time lag
+    re_im: float = 1.0
+    del_a: float = 0.0
+    del_ab: float = 0.0
+    g: float = 0.0
     telescope_response: float = 1.0
 
     def to_numpy_array(self) -> np.ndarray:
@@ -326,7 +371,6 @@ class rtdist_Parameters:
 
     def to_numpy_array(self) -> np.ndarray:
         return np.array(dataclasses.astuple(self), dtype=np.float32)
-
 
 @dataclasses.dataclass
 class Simrelt_Parameters:
@@ -532,6 +576,14 @@ class Reltrans:
             parameters.to_numpy_array(),
         )
 
+    def reltransring(self, energy: np.ndarray, parameters: Ring_Parameters) -> np.ndarray:
+        """A wrapper around the XSPEC interface of the ring-like coronal model."""
+        return _wrap_call(
+            self.lib_reltrans.fbreltranswip_,
+            energy.astype(np.float32),
+            parameters.to_numpy_array(),
+        )
+
     def reset(self):
         # print(f"NAME OF THE LIBRARY {self.lib_reltrans._name}")
         self.lib_reltrans.reset_reltrans()
@@ -715,3 +767,4 @@ class Reltrans:
             ct.byref(time),
         )
         return (lensing_factor.value, cos_delta.value, time.value)
+

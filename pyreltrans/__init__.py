@@ -2,6 +2,7 @@ from pyreltrans.wrappers import (
     Dbl_Parameters,
     DCP_Parameters,
     PL_Parameters,
+    Ring_Parameters,
     Reltrans,
     get_reltrans_library_path,
     rtdist_Parameters,
@@ -19,4 +20,5 @@ __all__ = [
     "Simrelt_Parameters",
     "SimulationResult",
     "ReltransSimulator",
+    "Ring_Parameters",
 ]
