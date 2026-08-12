@@ -161,12 +161,19 @@ contains
         print *, "Success"
     end subroutine stage_ring_emissivity
 
-    double precision function emissivity_at(r) result (em)
+    type(krz_EmissivityTrace) function emissivity_values_at(r, phi) result (em)
         !> Interpolate from the emissivity cache the emissivity profile at a
         !> particular radius on the accretion disc.
-        double precision, intent(in) :: r
-        em = krz_interpolate_emissivity(kerrz_cache, r)
-    end function emissivity_at
+        double precision, intent(in) :: r, phi
+        em = krz_interpolate_emissivity(kerrz_cache, r, phi)
+    end function emissivity_values_at
+
+    type(krz_ContinuumRing) function ring_continuum_at(phi) result (l)
+        !> Calculate the lensing factor and energyshift at a particular `phi`
+        !> coordinate along the ring.
+        double precision, intent(in) :: phi
+        l = krz_interpolate_continuum(kerrz_cache, phi)
+    end function emissivity_values_at
 
     ! These subroutines are defined for the test suite:
     subroutine test_kerrz_trace(spin, mu_obs, alpha, beta, t, r, theta, phi)   &

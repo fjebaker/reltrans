@@ -125,6 +125,13 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision rnn(config%nro), domegan(config%nro)
     logical dotrace
 
+    ! The number of bins in coronal ring azimuth to sum over:
+    ! TODO: make this part of the config structure
+    integer, parameter :: r_nphi = 50
+    double precision, parameter :: dphi = 2 * pi / float(r_nphi)
+    integer :: phi_i
+    double precision :: phi, lensing_factor
+
     ! Setup the output arrays
     call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi, ne)
     ! Zero the outputs
@@ -230,19 +237,37 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     call sum_impulse_components(.true., args%conf%nron, args%conf%nphin,       &
          rnn, domegan, args)
 
-    do m = 1, args%model%nlp
-        ! Calculate 4pi p(theta0,phi0) = ang_fac
-        ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),              &
-            args%model%b1, args%model%b2, args%model%qboost)
-        ! Adjust the lensing factor (easiest way to keep track)
-        lens(m) = lens(m) * ang_fac
-        ! Calculate the relxill reflection fraction for one columncosdout
-        frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,      &
-            cosdout(m))
-        !Finish calculation of observer's reflection fraction
-        args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,                  &
-            args%model%h(m)) / lens(m)
-    end do
+    if (args%model%ring_like) then
+        ! Need to calculate the bolometric flux of the observed spectrum. For
+        ! the ring-like corona, it's the same as the lamppost but integrated
+        ! over each azimuthal bin along the ring:
+
+        ! After this, lens(1) stores the average lensing factor.
+        observed_bolometric_flux = 0.0
+        do phi_i = 1, r_nphi
+            phi = phi_i * dphi
+            direct = direct_emission_at(phi)
+            observed_bolometric_flux += direct%lensing_factor * direct%gsd     &
+                * dphi
+        end do
+
+        ! This is now the ratio of reflected / observed
+        args%frobs(1) = args%frobs(1) / observed_bolometric_flux
+    else
+        do m = 1, args%model%nlp
+            ! Calculate 4pi p(theta0,phi0) = ang_fac
+            ang_fac = 4.d0 * pi * pnorm * pfunc_raw(-cosdelta_obs(m),          &
+                args%model%b1, args%model%b2, args%model%qboost)
+            ! Adjust the lensing factor (easiest way to keep track)
+            lens(m) = lens(m) * ang_fac
+            ! Calculate the relxill reflection fraction for one columncosdout
+            frrel(m) = sysfref(args%model%rin, rlp(:, m), cosd(:, m), ndelta,  &
+                cosdout(m))
+            !Finish calculation of observer's reflection fraction
+            args%frobs(m) = args%frobs(m) / dgsofac(args%model%a,              &
+                args%model%h(m)) / lens(m)
+        end do
+    end if
 
     if (args%conf%calculate_impulse_response) then
         ! Deal with edge effects
@@ -385,7 +410,7 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     use rtconstants, only: pi
     use emissivities
     use impulseresponse, only: time_axis, response
-    use kerrz, only: emissivity_at
+    use kerrz, only: krz_EmissivityTrace, emissivity_values_at
     use m_rtrans
     implicit none
 
@@ -414,14 +439,8 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     double precision, parameter :: dphi = 2 * pi / float(r_nphi)
     ! index counting which phi bin we are currently considering
     integer :: phi_i
-    double precision :: phi
-
-    ! Add to reflection fraction
-    ! TODO: get kerrz to spit this out
-    args%frobs(1) = 1.0
-
-    ! Calculate flux from pixel
-    gsd = dglpfacthick(re, args%model%a, args%model%h(1), args%mudisk)
+    double precision :: phi, lensing_factor
+    type(krz_EmissivityTrace) :: em_values
 
     normfac = real((g/(1.d0+args%model%zcos))**(2.+args%model%Gamma)*domega(i))
 
@@ -432,24 +451,35 @@ subroutine sum_ringlike_corona(i, non_relativistic, r_length, phi_length,      &
     mue = demang(args%model%a, args%model%muobs, re, alpha, beta)
     mubin = ceiling(mue * dble(args%conf%me))
 
-    ! Loop over all azmithal bins. This is in effect looping over the azimuthal
-    ! coordinate of the ring, but is equivalently looping around the azimuthal
-    ! coordinate of the accretion disc.
+    ! Loop over all azmithal bins of the accretion disc.
     do phi_i = 1, r_nphi
         phi = phi_i * dphi
 
-        ! TODO: the source to disc time of the current azimuthal bin
-        tausd = 0.0
-        emissivity = emissivity_at(re)
+        ! Get the `tausd`, `emissivity` and `g_sd` energyshifts for the
+        ! ring-like corona. The `re` and `phi` here are both coordinates on the
+        ! accretion disc.
+        em_values = emissivity_values_at(re, phi)
+        tausd = 0.0 ! em_values%t
+        emissivity = em_values%em
+        gsd = em_values%g
 
-        ! Normalise
-        emissivity = emissivity / float(r_nphi)
+        ! TODO: remove me once interpolations at the edges of the phi domain are
+        ! fixed.
+        if (emissivity == 0) then
+            cycle
+        end if
+
+        ! Add to reflection fraction:
+        ! This is Ingram et al. 2019 Equation (31), using the emissivity
+        ! expression and multiplying by the gsd factors to ensure the bolometric
+        ! intensity division is correct.
+        args%frobs(1) = args%frobs(1) + 4.0 * g**3 * emissivity *              &
+            gsd**(1 - args%model%Gamma) * domega(i) * dphi
 
         ! TODO: for the ring-like corona, the source-to-disc time can be
         ! deferred to be part of the continuum transfer function. I leave the
         ! below for now so that I can check whether the rest of the modified
         ! code is working.
-
         if (non_relativistic) then
             ! TODO: for the non-relativistic case, can likely also consider the
             ! corona to be a lamppost, since the spread of time values will be
