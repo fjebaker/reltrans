@@ -97,7 +97,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     use m_rtrans
     use raytracing, only: trace_disk_observer, getdcos, getlens
     use rtconstants, only: pi
-    use kerrz, only: stage_ring_emissivity
+    use kerrz, only: stage_ring_emissivity, krz_ContinuumRingPoint,            &
+        ring_continuum_at, stage_ring_continuum
     implicit none
 
     type(t_config), intent(inout) :: config
@@ -123,6 +124,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision :: dFe(model_args%nlp)
     double precision pnormer, pfunc_raw, ang_fac
     double precision rnn(config%nro), domegan(config%nro)
+    double precision :: observed_bolometric_flux
     logical dotrace
 
     ! The number of bins in coronal ring azimuth to sum over:
@@ -131,6 +133,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     double precision, parameter :: dphi = 2 * pi / float(r_nphi)
     integer :: phi_i
     double precision :: phi, lensing_factor
+
+    type(krz_ContinuumRingPoint) :: direct
 
     ! Setup the output arrays
     call bind_arguments(args, config, model_args, arrays, frobs, dFe, fi, ne)
@@ -227,6 +231,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     ! profile has been calculated.
     if (args%model%ring_like) then
         call stage_ring_emissivity(args%model%ring_r, args%model%ring_angle)
+        call stage_ring_continuum(args%model%muobs, args%model%ring_r,         &
+            args%model%ring_angle)
     end if
 
     ! the only arguments that change here are .false., nro, nphi, rn, domega
@@ -246,9 +252,9 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
         observed_bolometric_flux = 0.0
         do phi_i = 1, r_nphi
             phi = phi_i * dphi
-            direct = direct_emission_at(phi)
-            observed_bolometric_flux += direct%lensing_factor * direct%gsd     &
-                * dphi
+            direct = ring_continuum_at(phi)
+            observed_bolometric_flux = observed_bolometric_flux +              &
+                direct%dcosd_dcosth * direct%energyshift * dphi
         end do
 
         ! This is now the ratio of reflected / observed
