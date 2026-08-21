@@ -235,31 +235,31 @@ tables-fetch: $(RELTRANS_TABLES)
 $(CACHEDIR)/tables:
 	mkdir -p $@
 	@echo "Downloading pre-normalised tables (may take a few minutes)..."
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillver-a-Ec5_normalised.fits \
 		-o $(@)/xillver-a-Ec5_normalised.fits
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-00 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-00
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-01 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-01
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-02 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-02
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-03 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-03
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-04 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-04
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-05 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-05
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverCp_v3.4_normalised.fits-06 \
 		-o $(@)/xillverCp_v3.4_normalised.fits-06
-	curl -sL \
+	curl -fsL \
 		https://github.com/reltrans/model-data/releases/download/v0.1.0/xillverD-5_normalised.fits \
 		-o $(@)/xillverD-5_normalised.fits
 	( cd $(CACHEDIR)/tables && \
@@ -269,10 +269,10 @@ $(CACHEDIR)/tables:
 instrument-files:
 	@echo "Downloading test suite instrument files..."
 	mkdir -p $(CACHEDIR)/instrument-files
-	curl -sL \
+	curl -fsL \
 		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-consim135p-teamonly-array50.arf" \
 		-o $(CACHEDIR)/instrument-files/nicer-consim135p-teamonly-array50.arf
-	curl -sL \
+	curl -fsL \
 		"https://github.com/reltrans/model-data/releases/download/v0.1.0/nicer-rmf6s-teamonly-array50.rmf" \
 		-o $(CACHEDIR)/instrument-files/nicer-rmf6s-teamonly-array50.rmf
 	@echo "Instrument files now located at '$(CACHEDIR)/instrument-files'"
