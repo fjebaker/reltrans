@@ -127,13 +127,14 @@ jobs:
           # data are made
           gh release download v0.1.0 -D cache/tables -R reltrans/model-data
 
+          # Print the hashes to check integrity
+          find cache
+          md5sum cache/instrument-files/*
+          md5sum cache/tables/*
+
           # Stitch the large files back together
           cd cache/tables
           cat $(ls xillverCp_v3.4_normalised.fits-* | sort -V) > xillverCp_v3.4_normalised.fits
-
-          # Print the hashes to check integrity
-          md5sum cache/instrument-files/*
-          md5sum cache/tables/*
       - name: Run tests with coverage
         run: |
           export RELTRANS_TABLES="$(realpath cache/tables)"
