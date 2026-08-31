@@ -184,18 +184,20 @@ contains
         type(t_model_arguments), intent(inout) :: model_args
         type(t_arrays), intent(inout) :: arrays
         integer :: phi_i
-        double precision :: old_gso, aggregate_cutoff, phi
+        double precision :: old_gso, aggregate_cutoff, phi, old_lens
         type(krz_ContinuumRingPoint) :: source_to_obs
         ! Store the old `gso` value so it can be restored afterwards. This is
         ! the 'average' source-to-disc energyshift factor.
         old_gso = gso(1)
+        old_lens = lens(1)
 
         do phi_i = 1, ring_nphi
             phi = 2 * pi * phi_i * ring_weight
             source_to_obs = ring_continuum_at(phi)
 
             ! TODO: make gso a parameter of getcont
-            ! gso(1) = source_to_obs%energyshift
+            gso(1) = source_to_obs%energyshift
+            lens(1) = source_to_obs%dcosd_dcosth
 
             model_args%Cutoff_obs = model_args%Cutoff_s * gso(1)               &
                 / real(1.d0 + model_args%zcos)
@@ -220,6 +222,7 @@ contains
         end do
 
         gso(1) = old_gso
+        lens(1) = old_lens
         ! model_args%Cutoff_obs = aggregate_cutoff
     end subroutine ring_calculate_continuum
 
