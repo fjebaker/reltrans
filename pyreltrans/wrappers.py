@@ -224,6 +224,8 @@ class Ring_Parameters:
     radius: float = 4.0
     # The ring-corona opening angle (degrees)
     angle: float = 45.0
+    # The velocity of the ring.
+    corotation: float = 1.0
     # Spin
     a: float = 0.998
     # Inclination (degrees)

@@ -75,43 +75,43 @@ subroutine fbreltransWIp(ear, ne, param, ifl, photar)
   implicit none
   integer, parameter :: corona_config = -1 ! Use ring-like corona.
   integer :: ne, ifl, Cp, dset
-  real    :: ear(0:ne), param(22), photar(ne), par(32)
+  real    :: ear(0:ne), param(23), photar(ne), par(32)
 ! Settings
   Cp   = 2   !|Cp|=2 means nthcomp, Cp>1 means there is a density parameter
   dset = 0   !dset=0 means distance is not set, logxi set instead
 ! Transfer to general parameter array
   par(1)  = param(1)         !r offset of the ring
   par(2)  = param(2)         !inclination angle of the ring
-  par(3)  = param(3)         !a
-  par(4)  = param(4)         !inc
-  par(5)  = param(5)         !rin
-  par(6)  = param(6)         !rout
-  par(7)  = param(7)         !zcos
-  par(8)  = param(8)         !Gamma
-  par(9)  = param(9)         !logxi
-  par(10) = param(10)        !Afe
-  par(11) = param(11)        !lognep
-  par(12) = param(12)        !kTe
-  par(13) = 0.               ! not used
+  par(3)  = param(4)         !a
+  par(4)  = param(5)         !inc
+  par(5)  = param(6)         !rin
+  par(6)  = param(7)         !rout
+  par(7)  = param(8)         !zcos
+  par(8)  = param(9)         !Gamma
+  par(9)  = param(10)         !logxi
+  par(10) = param(11)        !Afe
+  par(11) = param(12)        !lognep
+  par(12) = param(13)        !kTe
+  par(13) = param(3)         !"phi_vel", i.e. velocity of the ring
   par(14) = 0.               ! not used
   par(15) = 0.               ! not used
-  par(16) = param(13)        !Nh
-  par(17) = param(14)        !boost
+  par(16) = param(14)        !Nh
+  par(17) = param(15)        !boost
   par(18) = 1.0              !qboost
-  par(19) = param(15)        !Mass
+  par(19) = param(16)        !Mass
   par(20) = 0.0              ! not used
   par(21) = 0.0              ! not used
   par(22) = 0.0              ! not used
-  par(23) = param(16)        !floHz
-  par(24) = param(17)        !fhiHz
-  par(25) = param(18)        !ReIm
-  par(26) = param(19)        !DelA
-  par(27) = param(20)        !DelAB
-  par(28) = param(21)        !g
+  par(23) = param(17)        !floHz
+  par(24) = param(18)        !fhiHz
+  par(25) = param(19)        !ReIm
+  par(26) = param(20)        !DelA
+  par(27) = param(21)        !DelAB
+  par(28) = param(22)        !g
   par(29) = 0.               ! not used
   par(30) = 0.               ! not used
   par(31) = 1.0              !Anorm
-  par(32) = param(22)        !telescope response
+  par(32) = param(23)        !telescope response
 ! Call general code
   call genreltrans(Cp, dset, corona_config, ear, ne, par, ifl, photar)  
   return

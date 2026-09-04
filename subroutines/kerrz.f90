@@ -48,7 +48,7 @@ contains
         end if
         ! The _8 means this is an INTEGER 8 literal in Fortran.
         if (krz_ThreadPool_init(kerrz_thread_pool, 0_8)                        &
-            .ne. KRZ_RET_SUCCESS) then
+            .ne. KRZ_RETCODE_SUCCESS) then
             write (*,*) "Failed to initialise thread pool"
             stop 1
         end if
@@ -56,7 +56,7 @@ contains
         ! Need a dummy metric to setup the emissivity cache.
         kerr_metric = krz_KerrMetric_init(1.0d0, 0.998d0)
         if (krz_EmissivityCache_init(kerrz_cache, 1000000_8)                    &
-            .ne. KRZ_RET_SUCCESS) then
+            .ne. KRZ_RETCODE_SUCCESS) then
             write (*,*) "Failed to initialise emissivity cache"
             stop 1
         end if
@@ -136,7 +136,7 @@ contains
             x%th = 1d-3
         end if
 
-        continuum = krz_traceContinuumLamppost(kerr_metric, x, h)
+        continuum = krz_traceContinuumLamppost(kerr_metric, x, h, 0.0d0)
 
         ! Note the angle mapping to be consistent with the Reltrans convention.
         ! Also the sign change on beta.
@@ -146,35 +146,35 @@ contains
             beta = continuum%beta)
     end function trace_lensing
 
-    subroutine stage_ring_emissivity(radius, theta)
+    subroutine stage_ring_emissivity(radius, theta, corotation)
         !> Calculate the emissivity profile for a ring-like corona with a
         !> particular height and radius.
-        double precision, intent(in) :: radius, theta
+        double precision, intent(in) :: radius, theta, corotation
         double precision :: height, offset
         type(krz_RingCorona) :: corona
         height = radius * cos(theta)
         offset = radius * sin(theta)
         print *, "M: ", kerr_metric%M, "a: ", kerr_metric%a
         print *, "height: ", height, "radius: ", offset
-        corona = krz_RingCorona(height, offset)
+        corona = krz_RingCorona(height, offset, corotation)
         if (krz_emissivity_ring(kerrz_thread_pool, kerrz_cache, kerr_metric,   &
-            corona) .ne. KRZ_RET_SUCCESS) then
+            corona) .ne. KRZ_RETCODE_SUCCESS) then
             write (*,*) "Failed to calculate emissivity profile."
             stop 1
         end if
-        print *, "Success"
+        print *, "Success [Emissivity]"
     end subroutine stage_ring_emissivity
 
-    subroutine stage_ring_continuum(mu_obs, radius, theta)
+    subroutine stage_ring_continuum(mu_obs, radius, theta, corotation)
         !> Calculate the emissivity profile for a ring-like corona with a
         !> particular height and radius.
-        double precision, intent(in) :: mu_obs, radius, theta
+        double precision, intent(in) :: mu_obs, radius, theta, corotation
         double precision :: height, offset
         type(krz_RingCorona) :: corona
         type(krz_FourVector) :: x_obs
         height = radius * cos(theta)
         offset = radius * sin(theta)
-        corona = krz_RingCorona(height, offset)
+        corona = krz_RingCorona(height, offset, corotation)
 
         x_obs = krz_FourVector(t = 0.0d0, r = R_AT_INFINITY,                   &
             th = acos(mu_obs), ph = 0.0d0)
@@ -185,11 +185,11 @@ contains
         end if
 
         if (krz_traceContinuumRing(kerrz_continuum_cache, kerr_metric, x_obs,  &
-            corona) .ne. KRZ_RET_SUCCESS) then
+            corona) .ne. KRZ_RETCODE_SUCCESS) then
             write (*,*) "Failed to calculate continuum."
             stop 1
         end if
-        print *, "Success"
+        print *, "Success [Continuum]"
     end subroutine stage_ring_continuum
 
     type(krz_EmissivityTrace) function emissivity_values_at(r, phi) result (em)

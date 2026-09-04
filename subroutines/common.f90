@@ -63,6 +63,14 @@ module common_types
         ! The inclination angle (in radians) off of the spin axis at which the
         ! ring is opened to.
         double precision :: ring_angle = 0.0
+        ! The velocity factor of the ring-like corona. This parameter controls
+        ! to what degree the ring corona corotates with the accretion disc. If
+        ! `ring_velocity = 0.0`, the local frame of the corona is the locally
+        ! non-rotating (LNR) frame.  A positive value is a multiplicative factor
+        ! on the phi-component of the accretion disc velocity, such that for
+        ! `ring_velocity = 1.0` the ring is fully corotating with the accretion
+        ! disc.
+        double precision :: ring_velocity = 0.0
     end type t_model_arguments
 
     type :: t_config
@@ -220,12 +228,15 @@ contains
             ! Set the heights to zero to catch bugs, since this paramter wont be
             ! used in the ring-like model.
             args%h = 0.0
+            args%eta_0 = 0.0
             args%ring_r = dble(params(1))
             ! Convert to radians:
             args%ring_angle = dble(params(2)) * pi / 180.0d0
+            args%ring_velocity = dble(params(13))
         else
             ! Standard n-many lampposts:
             args%nlp = nlp
+            args%eta_0 = params(13)
         end if
 
         do i = 1,args%nlp
@@ -244,7 +255,6 @@ contains
         args%lognep = params(11)
         args%Cutoff_s = params(12)
         args%Cutoff_obs = params(12)
-        args%eta_0 = params(13)
         args%eta = params(14)
         args%beta_p = params(15)
         args%Nh = params(16)

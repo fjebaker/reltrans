@@ -156,8 +156,9 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
     ! Get the GR ray-tracing CONTINUUM parameters which are stored in the module
     ! gr_continuum
     if (args%model%ring_like) then
+        print *, "---"
         call stage_ring_continuum(args%model%muobs, args%model%ring_r,         &
-            args%model%ring_angle)
+            args%model%ring_angle, args%model%ring_velocity)
 
         ! Average the g_so. This is done because so many parts of the code
         ! expect there to be a single unique g_so, for e.g. determining the
@@ -185,6 +186,7 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
             tauso(1) = tauso(1) + direct%delta_t * ring_weight
         end do
 
+
     else if (args%model%nlp .eq. 1) then
        gso(1) = real(dgsofac(args%model%a, args%model%h(1)))
        call getlens(args%model%a, args%model%h(1), args%model%muobs,           &
@@ -199,6 +201,10 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
           if (tauso(m) .ne. tauso(m)) stop "tauso is NaN"
        enddo
     endif
+
+    print *, "Avg lensing", lens(1)
+    print *, "Avg eshift", gso(1)
+    print *, "Avg time", tauso(1)
 
     ! Set up observer's camera ( alpha = rn sin(phin), beta = mueff rn cos(phin) )
     ! to do full GR ray tracing with
@@ -245,7 +251,8 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
 
     if (args%model%ring_like) then
         ! Calculate the disc illumination for the ring-like corona:
-        call stage_ring_emissivity(args%model%ring_r, args%model%ring_angle)
+        call stage_ring_emissivity(args%model%ring_r, args%model%ring_angle,   &
+            args%model%ring_velocity)
     else
         ! Calculate dcos/dr and time lags vs r for the lamppost model
         call getdcos(args%model%a, args%model%h, args%mudisk, ndelta,          &
@@ -269,7 +276,6 @@ subroutine rtrans(config, model_args, arrays, dset, d, ne, frobs, frrel)
          rnn, domegan, args)
 
     if (args%model%ring_like) then
-
         ! This is now the ratio of reflected / observed
         args%frobs(1) = args%frobs(1) / observed_bolometric_flux
     else
